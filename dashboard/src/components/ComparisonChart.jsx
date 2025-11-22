@@ -151,7 +151,7 @@ function ComparisonChart() {
         <div className="card-title-row">
           <div>
             <CardTitle tag="h4">집단별 스트레스 수준</CardTitle>
-            <p className="card-category">2024년 1학기 기준</p>
+            <p className="card-category">최근 16주 기준</p>
           </div>
           <div className="filter-dropdown-container">
             <select
