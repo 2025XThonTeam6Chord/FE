@@ -35,6 +35,10 @@ function ComparisonChart() {
         { name: "국어국문학과", stress: 6.5, students: 180 },
         { name: "영어영문학과", stress: 6.3, students: 200 },
         { name: "경영학과", stress: 6.8, students: 350 },
+        { name: "화학공학과", stress: 6.9, students: 220 },
+        { name: "산업공학과", stress: 6.7, students: 190 },
+        { name: "건축공학과", stress: 6.6, students: 160 },
+        { name: "신소재공학과", stress: 6.4, students: 140 },
       ],
       grade: [
         { name: "1학년", stress: 6.2, students: 850 },
@@ -73,19 +77,44 @@ function ComparisonChart() {
         const userId = "admin"; // 테스트용
         const filterNum = getFilterNumber(filterType);
         const response = await getFilteredScore(filterNum, userId);
-        console.log("📊 ComparisonChart 데이터 로드:", response);
+        console.log("📊 ComparisonChart API 응답:", response);
+        console.log("📊 Filter Type:", filterType, "Filter Num:", filterNum);
 
-        // API 응답이 배열인 경우 첫 번째 요소 사용
-        const apiData = Array.isArray(response) ? response[0] : response;
+        // API 응답 처리: Swagger 문서에 따르면 {filteredGroups: [...]} 형식이지만,
+        // 실제로는 배열로 직접 오는 경우도 있음
+        let dataArray = [];
+        if (Array.isArray(response)) {
+          // 배열로 직접 오는 경우
+          dataArray = response;
+        } else if (response?.filteredGroups) {
+          // {filteredGroups: [...]} 형식
+          dataArray = Array.isArray(response.filteredGroups)
+            ? response.filteredGroups
+            : [response.filteredGroups];
+        } else {
+          console.warn("예상하지 못한 API 응답 형식:", response);
+        }
+
+        console.log("📊 파싱된 데이터 배열:", dataArray);
 
         // API 응답을 차트 형식으로 변환
-        const transformedData =
-          apiData?.filteredGroups?.map((item) => ({
-            name: item.groupX || "",
-            stress: parseFloat(item.scoreY) / 10 || 0, // 100점 만점을 10점 만점으로 변환
-            students: 0, // API에 학생 수가 없으면 0
-          })) || [];
+        const transformedData = dataArray.map((item) => {
+          // scoreY 우선, 없으면 groupY 사용 (Swagger: scoreY, 실제: groupY도 사용)
+          const score =
+            item.scoreY !== undefined && item.scoreY !== null
+              ? parseFloat(item.scoreY)
+              : item.groupY !== undefined && item.groupY !== null
+              ? parseFloat(item.groupY)
+              : 0;
 
+          return {
+            name: item.groupX || "",
+            stress: score / 10 || 0, // 100점 만점을 10점 만점으로 변환
+            students: 0, // API에 학생 수가 없으면 0
+          };
+        });
+
+        console.log("📊 변환된 차트 데이터:", transformedData);
         setData(transformedData.length > 0 ? transformedData : defaultData);
       } catch (err) {
         console.error("집단별 점수 데이터 로드 실패:", err);
@@ -103,12 +132,12 @@ function ComparisonChart() {
     return data.reduce((sum, item) => sum + item.stress, 0) / data.length;
   }, [data]);
 
-  // 차트 높이 계산: 최대 6개 항목까지 표시, 그 이상은 스크롤
+  // 차트 높이 계산: 표시 영역은 6개 기준으로 고정, 실제 차트는 데이터 길이에 따라
   const maxVisibleItems = 6;
   const itemHeight = 50; // 각 항목당 높이
   const baseHeight = 100; // 기본 여백 및 축 높이
-  const chartHeight =
-    Math.min(data.length, maxVisibleItems) * itemHeight + baseHeight;
+  const visibleHeight = maxVisibleItems * itemHeight + baseHeight; // 표시 영역 높이
+  const chartHeight = data.length * itemHeight + baseHeight; // 실제 차트 높이
 
   // 스트레스 수준에 따라 색상 결정
   const getColor = (value) => {
@@ -138,7 +167,10 @@ function ComparisonChart() {
         </div>
       </CardHeader>
       <CardBody>
-        <div className="chart-wrapper">
+        <div
+          className="chart-wrapper"
+          style={{ maxHeight: `${visibleHeight}px` }}
+        >
           <div
             className="chart-container"
             style={{

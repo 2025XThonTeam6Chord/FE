@@ -49,29 +49,30 @@
 .chart-wrapper {
   width: 100%;
   max-width: 100%;
-  max-height: 500px;
   overflow-y: auto;
   overflow-x: hidden;
   padding-right: 8px;
   box-sizing: border-box;
+  position: relative;
 }
 
+/* 스크롤바 숨기기 */
 .chart-wrapper::-webkit-scrollbar {
-  width: 6px;
+  width: 0;
+  display: none;
+}
+
+.chart-wrapper {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
 
 .chart-wrapper::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 10px;
+  display: none;
 }
 
 .chart-wrapper::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 10px;
-}
-
-.chart-wrapper::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  display: none;
 }
 
 .chart-container {

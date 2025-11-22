@@ -121,25 +121,20 @@ export const getReserveList = async (userId) => {
  * GET /dashboard/filtered-score
  * @param {number} filter - 필터 타입 (0: 단과대별, 1: 학과별, 2: 학년별)
  * @param {string} userId - 유저 ID (X-USER-ID 헤더에 포함)
- * @returns {Promise<{
- *   filteredGroups: Array<{
- *     groupX: string,
- *     scoreY: string
- *   }>
- * }>}
+ * @returns {Promise<Array<{groupX: string, scoreY: string|number, groupY?: string|number}> | {filteredGroups: Array<{groupX: string, scoreY: string|number}>}>}
  */
 export const getFilteredScore = async (filter = 0, userId) => {
   try {
-    const response = await fetch(
-      `${API_BASE_URL}/filtered-score?filter=${filter}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "X-USER-ID": userId || "",
-        },
-      }
-    );
+    const url = `${API_BASE_URL}/filtered-score?filter=${filter}`;
+    console.log(`🔗 API 호출: ${url} (filter=${filter})`);
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "X-USER-ID": userId || "",
+      },
+    });
 
     if (!response.ok) {
       if (response.status === 401) {
@@ -151,6 +146,7 @@ export const getFilteredScore = async (filter = 0, userId) => {
     }
 
     const data = await response.json();
+    console.log(`✅ API 응답 (filter=${filter}):`, data);
     return data;
   } catch (error) {
     console.error("집단별 점수 조회 실패:", error);

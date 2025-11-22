@@ -166,18 +166,10 @@ function KPICards() {
         },
       ];
 
-  const getIconClass = (color) => {
-    if (color === "#EF4444") return "text-danger";
-    if (color === "#10B981") return "text-success";
-    if (color === "#F59E0B") return "text-warning";
-    return "text-primary";
-  };
-
   return (
     <Row>
       {kpis.map((kpi, index) => {
         const IconComponent = kpi.icon;
-        const iconClass = getIconClass(kpi.color);
         const statusClass = `kpi-status-${kpi.status}`;
         return (
           <Col lg="3" md="6" sm="6" key={index}>
@@ -185,8 +177,14 @@ function KPICards() {
               <CardBody>
                 <Row>
                   <Col md="4" xs="5">
-                    <div className={`icon-big text-center ${iconClass}`}>
-                      <IconComponent size={24} />
+                    <div
+                      className="icon-big text-center kpi-icon-wrapper"
+                      style={{
+                        color: kpi.color,
+                        "--icon-color": kpi.color,
+                      }}
+                    >
+                      <IconComponent size={32} color={kpi.color} />
                     </div>
                   </Col>
                   <Col md="8" xs="7">

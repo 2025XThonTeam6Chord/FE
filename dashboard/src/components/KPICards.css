@@ -76,6 +76,33 @@
   font-weight: 700 !important;
 }
 
+/* 아이콘 색상 강제 적용 */
+.card-stats .kpi-icon-wrapper,
+.card-stats .icon-big {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-stats .kpi-icon-wrapper svg,
+.card-stats .icon-big svg {
+  width: 32px !important;
+  height: 32px !important;
+}
+
+/* react-icons의 SVG path에 색상 강제 적용 */
+.card-stats .kpi-icon-wrapper svg path,
+.card-stats .icon-big svg path {
+  fill: var(--icon-color, currentColor) !important;
+  stroke: var(--icon-color, currentColor) !important;
+}
+
+.card-stats .kpi-icon-wrapper svg *,
+.card-stats .icon-big svg * {
+  fill: var(--icon-color, currentColor) !important;
+  stroke: var(--icon-color, currentColor) !important;
+}
+
 .kpi-change-badge {
   display: inline-block;
   padding: 4px 10px;
