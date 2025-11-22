@@ -1,0 +1,210 @@
+.risk-list-card {
+  overflow-x: auto;
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+.risk-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.risk-table thead {
+  background-color: #F7F8FA;
+  border-bottom: 2px solid var(--color-border);
+}
+
+.risk-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.risk-table td {
+  padding: 16px;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+.risk-table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.risk-table tbody tr:hover {
+  background-color: #F9FAFB;
+}
+
+.student-name {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.name-text {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.student-id {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+}
+
+.department-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.college {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+}
+
+.department {
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.risk-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.risk-badge-critical {
+  background-color: #FEE2E2;
+  color: #EF4444;
+}
+
+.risk-badge-warning {
+  background-color: #FEF3C7;
+  color: #F59E0B;
+}
+
+.risk-score {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.symptoms-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.symptom-tag {
+  display: inline-block;
+  padding: 4px 10px;
+  background-color: #EFF6FF;
+  color: #3B82F6;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.counseling-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.counseling-badge-waiting {
+  background-color: #F3F4F6;
+  color: #6B7280;
+}
+
+.counseling-badge-progress {
+  background-color: #DBEAFE;
+  color: #3B82F6;
+}
+
+.counseling-badge-completed {
+  background-color: #D1FAE5;
+  color: #10B981;
+}
+
+.date-text {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.action-btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.action-btn-primary:hover {
+  background-color: var(--color-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(255, 107, 0, 0.3);
+}
+
+.action-btn-secondary {
+  background-color: #E5E7EB;
+  color: var(--color-text-primary);
+}
+
+.action-btn-secondary:hover {
+  background-color: #D1D5DB;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.action-btn-completed {
+  background-color: #D1FAE5;
+  color: #10B981;
+}
+
+.action-btn-completed:hover {
+  background-color: #A7F3D0;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.action-btn:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 1200px) {
+  .risk-table {
+    font-size: 13px;
+  }
+
+  .risk-table th,
+  .risk-table td {
+    padding: 12px;
+  }
+}
+
