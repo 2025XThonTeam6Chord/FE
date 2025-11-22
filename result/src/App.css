@@ -1,0 +1,54 @@
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--gap);
+  min-height: 100vh;
+}
+
+/* Main Grid - 왼쪽: 마음날씨 + 심리 균형 분석, 오른쪽: 상세분석 + 맞춤케어 제안 */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: var(--gap);
+  margin-bottom: var(--gap);
+  align-items: start;
+}
+
+.content-left {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  height: 100%;
+}
+
+.content-right {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  height: 100%;
+}
+
+/* Section 3: Bottom Trend (Full Width) */
+.bottom-trend-section {
+  margin-bottom: 100px; /* Floating button 공간 확보 */
+  width: 100%;
+}
+
+/* Card Base Style */
+.card {
+  background-color: var(--color-surface);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-card);
+  padding: 24px;
+}
+
+@media (max-width: 768px) {
+  .app {
+    padding: 16px;
+  }
+
+  .main-grid {
+    grid-template-columns: 1fr;
+    gap: var(--gap);
+  }
+}

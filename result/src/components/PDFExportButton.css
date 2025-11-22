@@ -1,0 +1,41 @@
+.pdf-export-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(255, 107, 0, 0.3);
+}
+
+.pdf-export-button:hover {
+  background-color: #e55a00;
+  box-shadow: 0 4px 12px rgba(255, 107, 0, 0.4);
+  transform: translateY(-1px);
+}
+
+.pdf-export-button:active {
+  transform: translateY(0);
+}
+
+.pdf-icon {
+  font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  .pdf-export-button {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+
+  .pdf-icon {
+    font-size: 14px;
+  }
+}
+

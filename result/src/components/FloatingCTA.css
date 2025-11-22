@@ -1,0 +1,56 @@
+.floating-cta-container {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+}
+
+.floating-cta-pulse {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50px;
+  background-color: var(--color-primary);
+  z-index: -1;
+}
+
+.floating-cta-button {
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  padding: 16px 32px;
+  border-radius: 50px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 8px 32px rgba(255, 107, 0, 0.3);
+  transition: all 0.3s ease;
+  pointer-events: auto;
+}
+
+.floating-cta-button:hover {
+  background-color: #e55a00;
+  box-shadow: 0 12px 40px rgba(255, 107, 0, 0.4);
+  transform: translateY(-2px);
+}
+
+.button-icon {
+  font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .floating-cta-button {
+    padding: 14px 24px;
+    font-size: 14px;
+  }
+}
+

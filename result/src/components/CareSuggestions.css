@@ -1,0 +1,57 @@
+.solution-card {
+  background-color: var(--color-surface);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-card);
+  padding: 24px;
+  width: 100%;
+}
+
+.suggestions-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.suggestion-card {
+  background-color: var(--color-background);
+  padding: 20px;
+  border-radius: 16px;
+  border-left: 4px solid var(--color-primary);
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.suggestion-icon {
+  font-size: 28px;
+  color: var(--color-primary);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.suggestion-content {
+  flex: 1;
+}
+
+.suggestion-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-title);
+  margin-bottom: 8px;
+}
+
+.suggestion-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-text-body);
+  margin: 0;
+  font-weight: 400;
+}
+
+@media (max-width: 768px) {
+  .solution-card {
+    padding: 24px;
+  }
+}
+
