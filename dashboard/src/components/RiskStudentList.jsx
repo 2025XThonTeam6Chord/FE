@@ -1,7 +1,46 @@
+import { useState, useEffect } from 'react';
+import { getReserveList } from '../../../api/dashboard/dashboardApi';
 import './RiskStudentList.css';
 
 function RiskStudentList() {
-  const riskStudents = [
+  const [riskStudents, setRiskStudents] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const userId = "admin"; // 테스트용
+        const response = await getReserveList(userId);
+        console.log("📊 RiskStudentList 데이터 로드:", response);
+        
+        // API 응답이 배열인 경우 첫 번째 요소 사용
+        const apiData = Array.isArray(response) ? response[0] : response;
+        
+        // API 응답을 컴포넌트 형식으로 변환
+        const transformedData = apiData?.counselingUsers?.map((user, index) => ({
+          id: index + 1,
+          name: user.name || '이름 없음',
+          studentId: user.userKey || '',
+          college: user.univ || '',
+          department: user.major || '',
+          riskLevel: '주의', // API에 위험도 정보가 없으면 기본값
+          riskScore: 7.0, // API에 점수 정보가 없으면 기본값
+          symptoms: ['상담 신청'], // API에 증상 정보가 없으면 기본값
+          lastResponse: new Date().toISOString().split('T')[0].replace(/-/g, '.'), // 오늘 날짜
+          counselingStatus: '대기중',
+        })) || [];
+        
+        setRiskStudents(transformedData.length > 0 ? transformedData : getDefaultData());
+      } catch (err) {
+        console.error("상담 신청 목록 로드 실패:", err);
+        setRiskStudents(getDefaultData());
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // 기본 데이터 (API 실패 시 사용)
+  const getDefaultData = () => [
     {
       id: 1,
       name: '김○○',

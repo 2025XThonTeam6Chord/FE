@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   BarChart,
   Bar,
@@ -11,57 +11,91 @@ import {
   ReferenceLine,
 } from "recharts";
 import { Card, CardHeader, CardBody, CardTitle } from "reactstrap";
+import { getFilteredScore } from "../../../api/dashboard/dashboardApi";
 import "./ComparisonChart.css";
 
 function ComparisonChart() {
   const [filterType, setFilterType] = useState("college"); // 'college', 'department', 'grade'
+  const [data, setData] = useState([]);
 
-  // 단과대별 데이터
-  const collegeData = [
-    { name: "공과대학", stress: 7.2, students: 1200 },
-    { name: "인문대학", stress: 6.8, students: 850 },
-    { name: "경영대학", stress: 6.5, students: 680 },
-    { name: "의과대학", stress: 7.8, students: 420 },
-    { name: "예술대학", stress: 5.9, students: 350 },
-    { name: "사범대학", stress: 6.3, students: 520 },
-  ];
-
-  // 학과별 데이터
-  const departmentData = [
-    { name: "컴퓨터공학과", stress: 7.5, students: 320 },
-    { name: "전기전자공학과", stress: 7.1, students: 280 },
-    { name: "기계공학과", stress: 7.0, students: 250 },
-    { name: "국어국문학과", stress: 6.5, students: 180 },
-    { name: "영어영문학과", stress: 6.3, students: 200 },
-    { name: "경영학과", stress: 6.8, students: 350 },
-    { name: "회계학과", stress: 6.2, students: 180 },
-    { name: "의학과", stress: 8.0, students: 150 },
-    { name: "간호학과", stress: 7.6, students: 120 },
-  ];
-
-  // 학년별 데이터
-  const gradeData = [
-    { name: "1학년", stress: 6.2, students: 850 },
-    { name: "2학년", stress: 6.8, students: 920 },
-    { name: "3학년", stress: 7.3, students: 880 },
-    { name: "4학년", stress: 7.6, students: 750 },
-  ];
-
-  // 필터 타입에 따라 데이터 선택
-  const getData = () => {
-    switch (filterType) {
+  // 필터 타입을 API의 filter 숫자로 변환
+  const getFilterNumber = (type) => {
+    switch (type) {
       case "college":
-        return collegeData;
+        return 0;
       case "department":
-        return departmentData;
+        return 1;
       case "grade":
-        return gradeData;
+        return 2;
       default:
-        return collegeData;
+        return 0;
     }
   };
 
-  const data = getData();
+  // API에서 데이터 가져오기
+  useEffect(() => {
+    // 기본 데이터 (API 실패 시 사용)
+    const getDefaultData = () => {
+      switch (filterType) {
+        case "college":
+          return [
+            { name: "공과대학", stress: 7.2, students: 1200 },
+            { name: "인문대학", stress: 6.8, students: 850 },
+            { name: "경영대학", stress: 6.5, students: 680 },
+            { name: "의과대학", stress: 7.8, students: 420 },
+            { name: "예술대학", stress: 5.9, students: 350 },
+            { name: "사범대학", stress: 6.3, students: 520 },
+          ];
+        case "department":
+          return [
+            { name: "컴퓨터공학과", stress: 7.5, students: 320 },
+            { name: "전기전자공학과", stress: 7.1, students: 280 },
+            { name: "기계공학과", stress: 7.0, students: 250 },
+            { name: "국어국문학과", stress: 6.5, students: 180 },
+            { name: "영어영문학과", stress: 6.3, students: 200 },
+            { name: "경영학과", stress: 6.8, students: 350 },
+          ];
+        case "grade":
+          return [
+            { name: "1학년", stress: 6.2, students: 850 },
+            { name: "2학년", stress: 6.8, students: 920 },
+            { name: "3학년", stress: 7.3, students: 880 },
+            { name: "4학년", stress: 7.6, students: 750 },
+          ];
+        default:
+          return [];
+      }
+    };
+
+    const fetchData = async () => {
+      try {
+        const userId = "admin"; // 테스트용
+        const filterNum = getFilterNumber(filterType);
+        const response = await getFilteredScore(filterNum, userId);
+        console.log("📊 ComparisonChart 데이터 로드:", response);
+
+        // API 응답이 배열인 경우 첫 번째 요소 사용
+        const apiData = Array.isArray(response) ? response[0] : response;
+
+        // API 응답을 차트 형식으로 변환
+        const transformedData =
+          apiData?.filteredGroups?.map((item) => ({
+            name: item.groupX || "",
+            stress: parseFloat(item.scoreY) / 10 || 0, // 100점 만점을 10점 만점으로 변환
+            students: 0, // API에 학생 수가 없으면 0
+          })) || [];
+
+        setData(
+          transformedData.length > 0 ? transformedData : getDefaultData()
+        );
+      } catch (err) {
+        console.error("집단별 점수 데이터 로드 실패:", err);
+        setData(getDefaultData());
+      }
+    };
+
+    fetchData();
+  }, [filterType]);
 
   // 전체 평균 계산
   const averageStress =

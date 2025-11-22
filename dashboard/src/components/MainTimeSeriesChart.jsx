@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {
   AreaChart,
   Area,
@@ -9,11 +10,12 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Card, CardHeader, CardBody, CardTitle } from "reactstrap";
+import { getAverageScore } from "../../../api/dashboard/dashboardApi";
 import "./MainTimeSeriesChart.css";
 
 function MainTimeSeriesChart() {
-  // 학기 전체 데이터 (16주)
-  const data = [];
+  const [data, setData] = useState([]);
+
   const weeks = [
     "1주",
     "2주",
@@ -33,34 +35,70 @@ function MainTimeSeriesChart() {
     "16주",
   ];
 
-  // 중간고사 기간: 8-9주
-  // 기말고사 기간: 15-16주
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const userId = "admin"; // 테스트용
+        const response = await getAverageScore(userId);
+        console.log("📊 MainTimeSeriesChart 데이터 로드:", response);
+        
+        // API 응답이 배열인 경우 첫 번째 요소 사용
+        const apiData = Array.isArray(response) ? response[0] : response;
+        
+        // API 응답을 차트 형식으로 변환
+        const transformedData = apiData?.averageScores?.map((item, index) => {
+          const score = parseFloat(item.scoreY) / 10 || 0; // 100점 만점을 10점 만점으로 변환
+          return {
+            week: weeks[index] || `주차 ${index + 1}`,
+            stress: score, // API에서 stress와 depression을 구분하지 않으면 동일 값 사용
+            depression: score * 1.1, // 우울은 스트레스보다 약간 높게 설정 (API에 구분이 없을 경우)
+            weekNum: index + 1,
+          };
+        }) || [];
+        
+        // 데이터가 16주 미만이면 기본 데이터로 채우기
+        if (transformedData.length < 16) {
+          const defaultData = generateDefaultData();
+          setData(defaultData);
+        } else {
+          setData(transformedData.slice(0, 16)); // 최대 16주만 표시
+        }
+      } catch (err) {
+        console.error("평균 점수 데이터 로드 실패:", err);
+        setData(generateDefaultData());
+      }
+    };
 
-  for (let i = 0; i < 16; i++) {
-    let stress = 5.5;
-    let depression = 6.0;
+    fetchData();
+  }, []);
 
-    // 중간고사 기간 증가
-    if (i >= 7 && i <= 9) {
-      stress += Math.random() * 1.5 + 0.5;
-      depression += Math.random() * 1.2 + 0.3;
+  // 기본 데이터 생성 (API 실패 시 사용)
+  const generateDefaultData = () => {
+    const defaultData = [];
+    for (let i = 0; i < 16; i++) {
+      let stress = 5.5;
+      let depression = 6.0;
+
+      if (i >= 7 && i <= 9) {
+        stress += Math.random() * 1.5 + 0.5;
+        depression += Math.random() * 1.2 + 0.3;
+      } else if (i >= 14) {
+        stress += Math.random() * 2 + 0.8;
+        depression += Math.random() * 1.8 + 0.5;
+      } else {
+        stress += Math.random() * 0.8 - 0.4;
+        depression += Math.random() * 0.6 - 0.3;
+      }
+
+      defaultData.push({
+        week: weeks[i],
+        stress: Math.round(stress * 10) / 10,
+        depression: Math.round(depression * 10) / 10,
+        weekNum: i + 1,
+      });
     }
-    // 기말고사 기간 증가
-    else if (i >= 14) {
-      stress += Math.random() * 2 + 0.8;
-      depression += Math.random() * 1.8 + 0.5;
-    } else {
-      stress += Math.random() * 0.8 - 0.4;
-      depression += Math.random() * 0.6 - 0.3;
-    }
-
-    data.push({
-      week: weeks[i],
-      stress: Math.round(stress * 10) / 10,
-      depression: Math.round(depression * 10) / 10,
-      weekNum: i + 1,
-    });
-  }
+    return defaultData;
+  };
 
   return (
     <Card className="card-chart">
