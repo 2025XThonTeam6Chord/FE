@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
     Card,
@@ -12,11 +12,47 @@ import {
 } from '@mui/material';
 import { FaArrowLeft, FaPhone, FaMapMarkerAlt, FaClock } from 'react-icons/fa';
 import { FaCheckCircle } from 'react-icons/fa';
+import KakaoMap from '../components/KakaoMap';
 import './CounselingList.css';
 
 function CounselingList() {
     const navigate = useNavigate();
     const [selectedCard, setSelectedCard] = useState(null);
+    const [hoveredCard, setHoveredCard] = useState(null);
+    const cardRefs = useRef({});
+    const mapAreaRefs = useRef({});
+
+    // 외부 클릭 감지 - 지도 영역 닫기
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (!selectedCard) return;
+
+            // 클릭된 요소가 카드나 지도 영역 안에 있는지 확인
+            const clickedOnCard = Object.values(cardRefs.current).some(ref =>
+                ref && ref.contains(event.target)
+            );
+            const clickedOnMapArea = Object.values(mapAreaRefs.current).some(ref =>
+                ref && ref.contains(event.target)
+            );
+
+            // 카드나 지도 영역 밖을 클릭했으면 지도 닫기
+            // AnimatePresence가 exit 애니메이션을 처리하도록 즉시 상태 변경
+            if (!clickedOnCard && !clickedOnMapArea) {
+                setSelectedCard(null);
+            }
+        };
+
+        if (selectedCard) {
+            // 약간의 지연을 두어 이벤트 버블링이 완료된 후 처리
+            setTimeout(() => {
+                document.addEventListener('mousedown', handleClickOutside);
+            }, 0);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [selectedCard]);
 
     const counselingCenters = [
         {
@@ -159,27 +195,48 @@ function CounselingList() {
                             key={center.id}
                             variants={itemVariants}
                             custom={index}
+                            ref={(el) => {
+                                if (el) {
+                                    cardRefs.current[center.id] = el;
+                                }
+                            }}
                         >
                             <Card
-                                onClick={() => setSelectedCard(selectedCard === center.id ? null : center.id)}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    // 이미 선택된 카드면 아무 동작 안함
+                                    if (selectedCard === center.id) {
+                                        return;
+                                    }
+                                    // 다른 카드 선택 또는 새 카드 선택
+                                    setSelectedCard(center.id);
+                                }}
+                                onMouseEnter={() => setHoveredCard(center.id)}
+                                onMouseLeave={() => setHoveredCard(null)}
                                 sx={{
                                     borderRadius: 1,
                                     boxShadow: selectedCard === center.id
-                                        ? '0 8px 32px rgba(255, 107, 0, 0.2)'
-                                        : '0 4px 20px rgba(0, 0, 0, 0.05)',
+                                        ? '0 8px 32px rgba(0, 0, 0, 0.15)'
+                                        : hoveredCard === center.id
+                                            ? '0 6px 24px rgba(0, 0, 0, 0.12)'
+                                            : '0 4px 20px rgba(0, 0, 0, 0.05)',
                                     padding: center.isOurSchool ? 4 : 3,
                                     border: center.isOurSchool ? '2px solid' : '1px solid',
-                                    borderColor: selectedCard === center.id
-                                        ? 'primary.main'
-                                        : (center.isOurSchool ? 'primary.main' : 'divider'),
+                                    borderColor: center.isOurSchool ? 'primary.main' : 'divider',
                                     transform: selectedCard === center.id
                                         ? 'scale(1.01)'
-                                        : (center.isOurSchool ? 'scale(1.01)' : 'scale(1)'),
+                                        : hoveredCard === center.id
+                                            ? 'scale(1.005) translateY(-2px)'
+                                            : 'scale(1)',
                                     transition: 'all 0.3s ease',
                                     position: 'relative',
-                                    backgroundColor: selectedCard === center.id
-                                        ? 'rgba(255, 107, 0, 0.02)'
-                                        : 'background.paper',
+                                    backgroundColor: center.isOurSchool
+                                        ? 'rgba(255, 107, 0, 0.04)'
+                                        : selectedCard === center.id
+                                            ? 'rgba(255, 107, 0, 0.02)'
+                                            : hoveredCard === center.id
+                                                ? 'rgba(255, 107, 0, 0.01)'
+                                                : 'background.paper',
                                     cursor: 'pointer',
                                     marginBottom: selectedCard === center.id ? 0 : 0,
                                 }}
@@ -300,115 +357,147 @@ function CounselingList() {
                             </Card>
 
                             {/* 지도 및 버튼 슬라이드 영역 */}
-                            {selectedCard === center.id && (
-                                <motion.div
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: 'auto', opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                                    style={{ overflow: 'hidden' }}
-                                >
-                                    <Card
-                                        sx={{
-                                            borderRadius: 1,
-                                            marginTop: 2,
-                                            padding: 3,
-                                            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
-                                            border: '1px solid',
-                                            borderColor: 'divider',
+                            <AnimatePresence>
+                                {selectedCard === center.id && (
+                                    <motion.div
+                                        key={`map-${center.id}-${selectedCard}`}
+                                        ref={(el) => {
+                                            if (el) {
+                                                mapAreaRefs.current[center.id] = el;
+                                            }
                                         }}
+                                        initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                                        animate={{
+                                            height: 'auto',
+                                            opacity: 1,
+                                            marginTop: 16
+                                        }}
+                                        exit={{
+                                            height: 0,
+                                            opacity: 0,
+                                            marginTop: 0,
+                                            transition: {
+                                                height: {
+                                                    duration: 0.5,
+                                                    ease: [0.22, 1, 0.36, 1]
+                                                },
+                                                opacity: {
+                                                    duration: 0.3,
+                                                    ease: 'easeInOut'
+                                                },
+                                                marginTop: {
+                                                    duration: 0.5,
+                                                    ease: [0.22, 1, 0.36, 1]
+                                                }
+                                            }
+                                        }}
+                                        transition={{
+                                            height: {
+                                                duration: 0.5,
+                                                ease: [0.22, 1, 0.36, 1]
+                                            },
+                                            opacity: {
+                                                duration: 0.4,
+                                                delay: 0.1,
+                                                ease: 'easeInOut'
+                                            },
+                                            marginTop: {
+                                                duration: 0.5,
+                                                ease: [0.22, 1, 0.36, 1]
+                                            }
+                                        }}
+                                        style={{ overflow: 'hidden' }}
+                                        onClick={(e) => e.stopPropagation()}
                                     >
-                                        <Box
+                                        <Card
                                             sx={{
-                                                display: 'flex',
-                                                flexDirection: { xs: 'column', md: 'row' },
-                                                gap: 3,
+                                                borderRadius: 1,
+                                                marginTop: 2,
+                                                padding: 3,
+                                                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
+                                                border: '1px solid',
+                                                borderColor: 'divider',
                                             }}
                                         >
-                                            {/* 지도 */}
                                             <Box
                                                 sx={{
-                                                    flex: 1,
-                                                    minHeight: '300px',
-                                                    borderRadius: 1,
-                                                    overflow: 'hidden',
-                                                    backgroundColor: 'grey.100',
                                                     display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    position: 'relative',
+                                                    flexDirection: { xs: 'column', md: 'row' },
+                                                    gap: 3,
                                                 }}
                                             >
-                                                <iframe
-                                                    width="100%"
-                                                    height="300"
-                                                    style={{
-                                                        border: 0,
+                                                {/* 지도 */}
+                                                <Box
+                                                    sx={{
+                                                        flex: 1,
+                                                        minHeight: '300px',
+                                                        borderRadius: 1,
+                                                        overflow: 'hidden',
                                                     }}
-                                                    loading="lazy"
-                                                    allowFullScreen
-                                                    referrerPolicy="no-referrer-when-downgrade"
-                                                    src={`https://www.google.com/maps/embed/v1/place?q=${encodeURIComponent(center.location)}`}
-                                                />
-                                                {/* API 키가 필요할 경우: src에 &key=YOUR_API_KEY 추가 */}
-                                            </Box>
+                                                >
+                                                    <KakaoMap location={center.location} />
+                                                </Box>
 
-                                            {/* 버튼 영역 */}
-                                            <Box
-                                                sx={{
-                                                    display: 'flex',
-                                                    flexDirection: 'column',
-                                                    gap: 2,
-                                                    minWidth: { xs: '100%', md: '200px' },
-                                                    justifyContent: 'center',
-                                                }}
-                                            >
-                                                <Button
-                                                    variant="contained"
-                                                    color="primary"
-                                                    fullWidth
-                                                    startIcon={<FaCheckCircle />}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleSendResults(center.id);
-                                                    }}
+                                                {/* 버튼 영역 */}
+                                                <Box
                                                     sx={{
-                                                        borderRadius: 1,
-                                                        padding: '12px',
-                                                        fontWeight: 600,
-                                                        textTransform: 'none',
-                                                        fontSize: '15px',
+                                                        display: 'flex',
+                                                        flexDirection: 'column',
+                                                        gap: 2,
+                                                        minWidth: { xs: '100%', md: '200px' },
+                                                        justifyContent: 'center',
                                                     }}
                                                 >
-                                                    결과 즉시 전송
-                                                </Button>
-                                                <Button
-                                                    variant="outlined"
-                                                    color="primary"
-                                                    fullWidth
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleReserve(center.id);
-                                                    }}
-                                                    sx={{
-                                                        borderRadius: 1,
-                                                        padding: '12px',
-                                                        fontWeight: 600,
-                                                        textTransform: 'none',
-                                                        fontSize: '15px',
-                                                        borderWidth: 2,
-                                                        '&:hover': {
+                                                    {/* 동국대학교만 결과 즉시 전송 버튼 표시 */}
+                                                    {center.isOurSchool && (
+                                                        <Button
+                                                            variant="contained"
+                                                            color="primary"
+                                                            fullWidth
+                                                            startIcon={<FaCheckCircle />}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleSendResults(center.id);
+                                                            }}
+                                                            sx={{
+                                                                borderRadius: 1,
+                                                                padding: '12px',
+                                                                fontWeight: 600,
+                                                                textTransform: 'none',
+                                                                fontSize: '15px',
+                                                            }}
+                                                        >
+                                                            결과 즉시 전송
+                                                        </Button>
+                                                    )}
+                                                    <Button
+                                                        variant="outlined"
+                                                        color="primary"
+                                                        fullWidth
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleReserve(center.id);
+                                                        }}
+                                                        sx={{
+                                                            borderRadius: 1,
+                                                            padding: '12px',
+                                                            fontWeight: 600,
+                                                            textTransform: 'none',
+                                                            fontSize: '15px',
                                                             borderWidth: 2,
-                                                        },
-                                                    }}
-                                                >
-                                                    예약하기
-                                                </Button>
+                                                            '&:hover': {
+                                                                borderWidth: 2,
+                                                            },
+                                                        }}
+                                                    >
+                                                        예약하기
+                                                    </Button>
+                                                </Box>
                                             </Box>
-                                        </Box>
-                                    </Card>
-                                </motion.div>
-                            )}
+                                        </Card>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </motion.div>
                     ))}
                 </Box>
