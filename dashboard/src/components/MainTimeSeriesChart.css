@@ -1,9 +1,23 @@
 .main-chart-card {
   min-height: 520px;
+  overflow: hidden;
+  width: 100%;
+  max-width: 100%;
 }
 
 .chart-container {
   margin: 20px 0;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.chart-container > * {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
 }
 
 .custom-tooltip {
