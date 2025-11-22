@@ -5,7 +5,9 @@
   border-radius: 20px !important;
   background-color: #ffffff !important;
   overflow: hidden;
-  height: 100%;
+  height: 580px;
+  display: flex;
+  flex-direction: column;
 }
 
 .widget-header {
@@ -76,7 +78,11 @@
 
 /* --- 차트 영역 --- */
 .chart-body-modern {
-  padding: 0 !important; /* 왼쪽 패딩 줄임 (Y축 라벨 공간 고려) */
+  padding: 24px 24px 24px 10px !important; /* 왼쪽 패딩 줄임 (Y축 라벨 공간 고려) */
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 /* --- 커스텀 툴팁 (Dark) --- */

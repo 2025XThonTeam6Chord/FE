@@ -50,8 +50,20 @@ export const getTotalSummary = async (userId) => {
       );
     }
 
-    const data = await response.json();
-    return data;
+    // 응답 본문이 비어있는지 확인
+    const text = await response.text();
+    if (!text || text.trim() === "") {
+      console.warn("⚠️ total-summary API 응답이 비어있습니다.");
+      return null; // 빈 응답은 null 반환
+    }
+
+    try {
+      const data = JSON.parse(text);
+      return data;
+    } catch (parseError) {
+      console.error("JSON 파싱 실패:", parseError, "응답 텍스트:", text);
+      throw new Error("서버 응답을 파싱할 수 없습니다.");
+    }
   } catch (error) {
     console.error("전체 정신건강 지표 요약 조회 실패:", error);
 
