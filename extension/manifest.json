@@ -1,0 +1,27 @@
+{
+    "manifest_version": 3,
+    "name": "다독 - 심리 상태 기록",
+    "version": "1.0.0",
+    "description": "동국대학교 이클래스에서 심리 상태를 간편하게 기록할 수 있는 확장 프로그램",
+    "permissions": [
+        "activeTab"
+    ],
+    "action": {
+        "default_popup": "popup.html"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "https://eclass.dongguk.edu/*",
+                "http://localhost/*"
+            ],
+            "css": [
+                "style.css"
+            ],
+            "js": [
+                "content.js"
+            ],
+            "run_at": "document_end"
+        }
+    ]
+}

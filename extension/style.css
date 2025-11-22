@@ -1,0 +1,197 @@
+/* Floating Action Button Container */
+.dadok-fab-container {
+    position: fixed;
+    bottom: 40px;
+    right: 40px;
+    width: 72px;
+    height: 72px;
+    z-index: 10000;
+}
+
+/* Circular Progress Ring SVG */
+.dadok-progress-ring {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 72px;
+    height: 72px;
+    transform: rotate(-90deg);
+    pointer-events: none;
+}
+
+.dadok-progress-track {
+    fill: none;
+    stroke: #E0E0E0;
+    stroke-width: 4;
+}
+
+.dadok-progress-fill {
+    fill: none;
+    stroke: #00b800;
+    stroke-width: 4;
+    stroke-linecap: round;
+
+    /* [삭제] 아래 두 줄은 JS에서 제어하므로 삭제합니다 */
+    /* stroke-dasharray: 188.5; */
+    /* stroke-dashoffset: 188.5; */
+
+    transition: stroke-dashoffset 0.5s ease;
+}
+
+/* Floating Action Button (FAB) */
+.dadok-fab {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    width: 64px;
+    height: 64px;
+    background-color: #FF6B00;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(255, 107, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: white;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    user-select: none;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Pretendard', 'Roboto', 'Oxygen',
+        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+}
+
+.dadok-fab:hover {
+    transform: scale(1.1);
+    box-shadow: 0 12px 32px rgba(255, 107, 0, 0.5);
+}
+
+.dadok-fab:active {
+    transform: scale(0.95);
+}
+
+.dadok-fab.completed {
+    animation: bounce 0.6s ease;
+}
+
+@keyframes bounce {
+
+    0%,
+    100% {
+        transform: translateY(0) scale(1);
+    }
+
+    25% {
+        transform: translateY(-10px) scale(1.1);
+    }
+
+    50% {
+        transform: translateY(-5px) scale(1.05);
+    }
+
+    75% {
+        transform: translateY(-2px) scale(1.02);
+    }
+}
+
+/* Popup Menu */
+.dadok-popup {
+    position: fixed;
+    bottom: 120px;
+    right: 40px;
+    width: 280px;
+    background-color: #FFFFFF;
+    border-radius: 24px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    padding: 24px;
+    z-index: 10001;
+    display: none;
+    flex-direction: column;
+    gap: 12px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Pretendard', 'Roboto', 'Oxygen',
+        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    animation: slideUp 0.3s ease;
+}
+
+.dadok-popup.active {
+    display: flex;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dadok-popup-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #111111;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.dadok-popup-subtitle {
+    font-size: 14px;
+    color: #888888;
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+.dadok-emotion-button {
+    width: 100%;
+    padding: 16px 20px;
+    background-color: #F7F8FA;
+    border: none;
+    border-radius: 16px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    color: #333333;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: inherit;
+    text-align: left;
+}
+
+.dadok-emotion-button:hover {
+    background-color: #FFF4E6;
+    transform: translateX(4px);
+}
+
+.dadok-emotion-button:active {
+    transform: translateX(2px);
+}
+
+.dadok-emotion-emoji {
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.dadok-emotion-text {
+    flex: 1;
+}
+
+/* Overlay (팝업 외부 클릭 시 닫기) */
+.dadok-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.1);
+    z-index: 9999;
+    display: none;
+}
+
+.dadok-overlay.active {
+    display: block;
+}
