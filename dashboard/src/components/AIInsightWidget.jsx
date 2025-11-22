@@ -78,7 +78,6 @@ function AIInsightWidget() {
     <Card className="ai-insight-widget">
       <CardHeader>
         <div className="ai-header">
-          <FaRobot className="ai-icon" />
           <div>
             <CardTitle tag="h4">AI 분석 인사이트</CardTitle>
             <p className="card-category">실시간 패턴 감지 및 예측</p>

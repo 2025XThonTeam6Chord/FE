@@ -1,5 +1,8 @@
 .ai-insight-widget {
-  min-height: 420px;
+  height: 580px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .ai-header {

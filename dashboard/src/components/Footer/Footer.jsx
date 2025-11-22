@@ -9,7 +9,7 @@ function Footer({ default: defaultFooter = false, fluid = false }) {
             <ul>
               <li>
                 <a href="/" target="_blank" rel="noopener noreferrer">
-                  다독
+                  넌 잘못이 없어
                 </a>
               </li>
             </ul>
@@ -17,7 +17,7 @@ function Footer({ default: defaultFooter = false, fluid = false }) {
           <div className="credits ml-auto">
             <div className="copyright">
               &copy; {1900 + new Date().getYear()}, made with{" "}
-              <i className="fa fa-heart heart" /> by 다독 팀
+              <i className="fa fa-heart heart" /> by 내가 뭘 잘못했지 팀
             </div>
           </div>
         </Row>

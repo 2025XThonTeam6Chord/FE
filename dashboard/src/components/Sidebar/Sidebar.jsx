@@ -35,7 +35,7 @@ function Sidebar({ bgColor = "black", activeColor = "info" }) {
           </div>
         </a>
         <a href="/" className="simple-text logo-normal">
-          다독 관리자
+          넌 잘못이 없어 관리자
         </a>
       </div>
       <div className="sidebar-wrapper" ref={sidebar}>
