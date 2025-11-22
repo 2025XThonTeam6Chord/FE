@@ -1,9 +1,10 @@
+import { useState, useEffect } from 'react';
 import { FaCloudSun } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import AnimatedCounter from './AnimatedCounter';
 import './ReportSummary.css';
 
-function ReportSummary() {
+function ReportSummary({ summaryData, isLoading }) {
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -78,8 +79,10 @@ function ReportSummary() {
 
       <motion.div className="mood-description" variants={itemVariants}>
         <p>
-          오늘의 마음은 구름 낀 해와 같아요. 약간의 스트레스가 있지만, 회복력이
-          함께하고 있어요. 작은 휴식이 큰 도움이 될 수 있습니다.
+          {isLoading
+            ? '분석 중...'
+            : summaryData?.summary || '오늘의 마음은 구름 낀 해와 같아요. 약간의 스트레스가 있지만, 회복력이 함께하고 있어요. 작은 휴식이 큰 도움이 될 수 있습니다.'
+          }
         </p>
       </motion.div>
 
@@ -96,9 +99,9 @@ function ReportSummary() {
         </motion.div>
         <motion.div className="score-item" variants={scoreVariants} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
           <div className="score-value">
-            <AnimatedCounter value={14} />
+            <AnimatedCounter value={summaryData?.answerCount || 0} />
           </div>
-          <div className="score-label">분석 일수</div>
+          <div className="score-label">답변 수</div>
         </motion.div>
       </motion.div>
     </motion.div>

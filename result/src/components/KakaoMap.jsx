@@ -9,7 +9,7 @@ const locationCoordinates = {
     '서울 강남구 테헤란로 123': { lat: 37.5013, lng: 127.0397 }, // 강남구
 };
 
-const KAKAO_MAP_APP_KEY = import.meta.env.VITE_KAKAO_MAP_APP_KEY;
+const KAKAO_MAP_APP_KEY = import.meta.env.VITE_KAKAO_MAP_APP_KEY || '4040ba155d7916e94aab712ab41925b6';
 
 function KakaoMap({ location }) {
     const mapRef = useRef(null);
@@ -17,27 +17,63 @@ function KakaoMap({ location }) {
     const [scriptLoaded, setScriptLoaded] = useState(false);
     const [error, setError] = useState(null);
 
-    // 카카오 맵 스크립트 로드 확인 (index.html에서 이미 로드됨)
+    // 카카오 맵 스크립트 동적 로드
     useEffect(() => {
-        // 스크립트가 로드될 때까지 대기
-        const checkKakaoMap = setInterval(() => {
-            if (window.kakao && window.kakao.maps) {
-                clearInterval(checkKakaoMap);
-                setScriptLoaded(true);
-            }
-        }, 100);
+        // 이미 스크립트가 로드되어 있으면 바로 진행
+        if (window.kakao && window.kakao.maps) {
+            setScriptLoaded(true);
+            return;
+        }
 
-        // 최대 5초 대기
-        const timeout = setTimeout(() => {
-            clearInterval(checkKakaoMap);
-            if (!window.kakao || !window.kakao.maps) {
-                setError('카카오 맵 API 로드 실패. 스크립트를 확인해주세요.');
+        // 스크립트가 이미 로딩 중인지 확인
+        const existingScript = document.querySelector('script[src*="dapi.kakao.com/v2/maps/sdk.js"]');
+        if (existingScript) {
+            // 스크립트 로드 완료 대기
+            const checkKakaoMap = setInterval(() => {
+                if (window.kakao && window.kakao.maps) {
+                    clearInterval(checkKakaoMap);
+                    setScriptLoaded(true);
+                }
+            }, 100);
+
+            const timeout = setTimeout(() => {
+                clearInterval(checkKakaoMap);
+                if (!window.kakao || !window.kakao.maps) {
+                    setError('카카오 맵 API 로드 실패. API 키를 확인해주세요.');
+                }
+            }, 5000);
+
+            return () => {
+                clearInterval(checkKakaoMap);
+                clearTimeout(timeout);
+            };
+        }
+
+        // 스크립트 동적 로드
+        const script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_APP_KEY}&autoload=false`;
+        script.async = true;
+
+        script.onload = () => {
+            // 카카오 맵 API 로드 완료 후 초기화
+            if (window.kakao && window.kakao.maps) {
+                window.kakao.maps.load(() => {
+                    setScriptLoaded(true);
+                });
+            } else {
+                setError('카카오 맵 API 초기화 실패. API 키를 확인해주세요.');
             }
-        }, 5000);
+        };
+
+        script.onerror = () => {
+            setError('카카오 맵 API 스크립트 로드 실패. 네트워크 연결을 확인해주세요.');
+        };
+
+        document.head.appendChild(script);
 
         return () => {
-            clearInterval(checkKakaoMap);
-            clearTimeout(timeout);
+            // 컴포넌트 언마운트 시 스크립트 제거는 하지 않음 (다른 컴포넌트에서 사용할 수 있음)
         };
     }, []);
 
