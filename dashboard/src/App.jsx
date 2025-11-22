@@ -1,32 +1,66 @@
-import KPICards from './components/KPICards';
-import MainTimeSeriesChart from './components/MainTimeSeriesChart';
-import ComparisonChart from './components/ComparisonChart';
-import AIInsightWidget from './components/AIInsightWidget';
-import RiskStudentList from './components/RiskStudentList';
-import './App.css';
+import { useEffect, useRef, useState } from "react";
+import PerfectScrollbar from "perfect-scrollbar";
+import Sidebar from "./components/Sidebar/Sidebar";
+import DemoNavbar from "./components/Navbars/DemoNavbar";
+import Footer from "./components/Footer/Footer";
+import KPICards from "./components/KPICards";
+import MainTimeSeriesChart from "./components/MainTimeSeriesChart";
+import ComparisonChart from "./components/ComparisonChart";
+import AIInsightWidget from "./components/AIInsightWidget";
+import RiskStudentList from "./components/RiskStudentList";
+import "./App.css";
 
 function App() {
+  const [backgroundColor] = useState("black");
+  const [activeColor] = useState("info");
+  const mainPanel = useRef(null);
+
+  useEffect(() => {
+    if (navigator.platform.indexOf("Win") > -1 && mainPanel.current) {
+      try {
+        const ps = new PerfectScrollbar(mainPanel.current);
+        document.body.classList.toggle("perfect-scrollbar-on");
+        return () => {
+          try {
+            ps.destroy();
+          } catch (e) {
+            console.error(e);
+          }
+          document.body.classList.toggle("perfect-scrollbar-on");
+        };
+      } catch (error) {
+        console.error("PerfectScrollbar error:", error);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (mainPanel.current) {
+      mainPanel.current.scrollTop = 0;
+      if (document.scrollingElement) {
+        document.scrollingElement.scrollTop = 0;
+      }
+    }
+  });
+
   return (
-    <div className="app">
-      <header className="dashboard-header">
-        <h1 className="dashboard-title">다독 관리자 대시보드</h1>
-        <p className="dashboard-subtitle">학생 심리 건강 모니터링 및 분석</p>
-      </header>
-
-      {/* KPI Cards */}
-      <KPICards />
-
-      {/* Main Content Grid */}
-      <div className="main-grid">
-        <MainTimeSeriesChart />
-        <div className="right-column">
-          <ComparisonChart />
-          <AIInsightWidget />
+    <div className="wrapper">
+      <Sidebar bgColor={backgroundColor} activeColor={activeColor} />
+      <div className="main-panel" ref={mainPanel}>
+        <DemoNavbar />
+        <div className="content">
+          <KPICards />
+          <div className="time-series-section">
+            <MainTimeSeriesChart />
+          </div>
+          <div className="bottom-grid">
+            <ComparisonChart />
+            <AIInsightWidget />
+          </div>
+          <RiskStudentList />
         </div>
+        <Footer fluid />
       </div>
-
-      {/* Risk Student List */}
-      <RiskStudentList />
     </div>
   );
 }
