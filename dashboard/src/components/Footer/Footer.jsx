@@ -17,7 +17,7 @@ function Footer({ default: defaultFooter = false, fluid = false }) {
           <div className="credits ml-auto">
             <div className="copyright">
               &copy; {1900 + new Date().getYear()}, made with{" "}
-              <i className="fa fa-heart heart" /> by 넌 잘못한거 없어 팀
+              <i className="fa fa-heart heart" /> by 내가 뭘 잘못했지 팀
             </div>
           </div>
         </Row>

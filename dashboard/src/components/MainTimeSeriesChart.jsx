@@ -6,7 +6,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from "recharts";
 import { Card, CardHeader, CardBody, CardTitle } from "reactstrap";
@@ -33,7 +32,6 @@ function MainTimeSeriesChart() {
       "13주",
       "14주",
       "15주",
-      "16주",
     ],
     []
   );
@@ -41,7 +39,7 @@ function MainTimeSeriesChart() {
   // 기본 데이터 생성 (API 실패 시 사용)
   const generateDefaultData = useCallback(() => {
     const defaultData = [];
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < 15; i++) {
       let stress = 5.5;
 
       if (i >= 7 && i <= 9) {
@@ -83,7 +81,7 @@ function MainTimeSeriesChart() {
 
         // API 응답을 차트 형식으로 변환
         const transformedData = dataArray.map((item, index) => {
-          // scoreY를 숫자로 변환 (이미 0-10 범위이므로 변환 없이 그대로 사용)
+          // scoreY를 숫자로 변환 (100점 만점 그대로 사용)
           const score = parseFloat(item.scoreY || item.score || 0);
 
           // dateX에서 날짜 범위 추출 (예: "2025/08/17~2025/08/24")
@@ -91,18 +89,19 @@ function MainTimeSeriesChart() {
 
           return {
             week: weeks[index] || `주차 ${index + 1}`,
-            stress: score, // API에서 온 점수 그대로 사용 (이미 0-10 범위)
+            stress: score, // 100점 만점 점수
             weekNum: index + 1,
             dateRange: dateRange, // 날짜 범위 저장 (필요시 사용)
           };
         });
 
-        // 데이터가 16주 미만이면 기본 데이터로 채우기
-        if (transformedData.length < 16) {
+        // API 데이터 그대로 사용 (15주까지만)
+        if (transformedData.length > 0) {
+          setData(transformedData.slice(0, 15)); // 최대 15주만 표시
+        } else {
+          // API 데이터가 없으면 기본 데이터 사용
           const defaultData = generateDefaultData();
           setData(defaultData);
-        } else {
-          setData(transformedData.slice(0, 16)); // 최대 16주만 표시
         }
       } catch (err) {
         console.error("평균 점수 데이터 로드 실패:", err);
@@ -116,7 +115,7 @@ function MainTimeSeriesChart() {
   return (
     <Card className="card-chart">
       <CardHeader>
-        <CardTitle tag="h4">최근 16주 심리 상태 추이</CardTitle>
+        <CardTitle tag="h4">최근 15주 심리 상태 추이</CardTitle>
       </CardHeader>
       <CardBody>
         <div className="chart-container">
@@ -143,7 +142,7 @@ function MainTimeSeriesChart() {
               <YAxis
                 stroke="#888888"
                 tick={{ fill: "#555555", fontSize: 12 }}
-                domain={[0, 10]}
+                domain={[0, 100]}
                 label={{
                   value: "점수",
                   angle: -90,
@@ -177,11 +176,6 @@ function MainTimeSeriesChart() {
                   return null;
                 }}
               />
-              <Legend
-                wrapperStyle={{ paddingTop: 20 }}
-                formatter={() => "스트레스 수준"}
-              />
-
               <Area
                 type="monotone"
                 dataKey="stress"

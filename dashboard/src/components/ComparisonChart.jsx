@@ -11,40 +11,37 @@ import {
   ReferenceLine,
 } from "recharts";
 import { Card, CardHeader, CardBody, CardTitle } from "reactstrap";
+import { Filter } from "lucide-react";
 import { getFilteredScore } from "../../../api/dashboard/dashboardApi";
 import "./ComparisonChart.css";
 
 function ComparisonChart() {
-  const [filterType, setFilterType] = useState("college"); // 'college', 'department', 'grade'
+  const [filterType, setFilterType] = useState("college");
 
-  // 기본 데이터 맵
+  // Mock 데이터 (70점 기준 테스트를 위해 100점 만점 스케일로 변경)
   const defaultDataMap = useMemo(
     () => ({
       college: [
-        { name: "공과대학", stress: 7.2, students: 1200 },
-        { name: "인문대학", stress: 6.8, students: 850 },
-        { name: "경영대학", stress: 6.5, students: 680 },
-        { name: "의과대학", stress: 7.8, students: 420 },
-        { name: "예술대학", stress: 5.9, students: 350 },
-        { name: "사범대학", stress: 6.3, students: 520 },
+        { name: "공과대학", stress: 72, students: 1200 },
+        { name: "인문대학", stress: 68, students: 850 },
+        { name: "경영대학", stress: 65, students: 680 },
+        { name: "의과대학", stress: 78, students: 420 }, // 70점 이상 (Red)
+        { name: "예술대학", stress: 59, students: 350 },
+        { name: "사범대학", stress: 63, students: 520 },
       ],
       department: [
-        { name: "컴퓨터공학과", stress: 7.5, students: 320 },
-        { name: "전기전자공학과", stress: 7.1, students: 280 },
-        { name: "기계공학과", stress: 7.0, students: 250 },
-        { name: "국어국문학과", stress: 6.5, students: 180 },
-        { name: "영어영문학과", stress: 6.3, students: 200 },
-        { name: "경영학과", stress: 6.8, students: 350 },
-        { name: "화학공학과", stress: 6.9, students: 220 },
-        { name: "산업공학과", stress: 6.7, students: 190 },
-        { name: "건축공학과", stress: 6.6, students: 160 },
-        { name: "신소재공학과", stress: 6.4, students: 140 },
+        { name: "컴퓨터공학", stress: 75, students: 320 },
+        { name: "전기전자", stress: 71, students: 280 },
+        { name: "기계공학", stress: 70, students: 250 },
+        { name: "국어국문", stress: 65, students: 180 },
+        { name: "영어영문", stress: 63, students: 200 },
+        { name: "경영학과", stress: 68, students: 350 },
       ],
       grade: [
-        { name: "1학년", stress: 6.2, students: 850 },
-        { name: "2학년", stress: 6.8, students: 920 },
-        { name: "3학년", stress: 7.3, students: 880 },
-        { name: "4학년", stress: 7.6, students: 750 },
+        { name: "1학년", stress: 62, students: 850 },
+        { name: "2학년", stress: 68, students: 920 },
+        { name: "3학년", stress: 73, students: 880 },
+        { name: "4학년", stress: 76, students: 750 },
       ],
     }),
     []
@@ -52,7 +49,6 @@ function ComparisonChart() {
 
   const [data, setData] = useState(() => defaultDataMap.college);
 
-  // 필터 타입을 API의 filter 숫자로 변환
   const getFilterNumber = (type) => {
     switch (type) {
       case "college":
@@ -66,201 +62,177 @@ function ComparisonChart() {
     }
   };
 
-  // API에서 데이터 가져오기
-  useEffect(() => {
-    // 기본 데이터로 즉시 설정하여 빠른 UI 업데이트
-    const defaultData = defaultDataMap[filterType] || [];
-    setData(defaultData);
+  const handleFilterChange = (e) => {
+    const newFilter = e.target.value;
+    setFilterType(newFilter);
+    setData(defaultDataMap[newFilter] || []);
+  };
 
+  useEffect(() => {
     const fetchData = async () => {
       try {
-        const userId = "admin"; // 테스트용
+        const userId = "admin";
         const filterNum = getFilterNumber(filterType);
         const response = await getFilteredScore(filterNum, userId);
-        console.log("📊 ComparisonChart API 응답:", response);
-        console.log("📊 Filter Type:", filterType, "Filter Num:", filterNum);
 
-        // API 응답 처리: Swagger 문서에 따르면 {filteredGroups: [...]} 형식이지만,
-        // 실제로는 배열로 직접 오는 경우도 있음
         let dataArray = [];
         if (Array.isArray(response)) {
-          // 배열로 직접 오는 경우
           dataArray = response;
         } else if (response?.filteredGroups) {
-          // {filteredGroups: [...]} 형식
           dataArray = Array.isArray(response.filteredGroups)
             ? response.filteredGroups
             : [response.filteredGroups];
-        } else {
-          console.warn("예상하지 못한 API 응답 형식:", response);
         }
 
-        console.log("📊 파싱된 데이터 배열:", dataArray);
+        if (dataArray.length > 0) {
+          const transformedData = dataArray.map((item) => {
+            const rawScore = item.scoreX ?? item.scoreY ?? 0;
+            const score = parseFloat(rawScore) || 0;
+            const name = item.groupY || item.groupX || "";
 
-        // API 응답을 차트 형식으로 변환
-        const transformedData = dataArray.map((item) => {
-          // scoreY 우선, 없으면 groupY 사용 (Swagger: scoreY, 실제: groupY도 사용)
-          const score =
-            item.scoreY !== undefined && item.scoreY !== null
-              ? parseFloat(item.scoreY)
-              : item.groupY !== undefined && item.groupY !== null
-              ? parseFloat(item.groupY)
-              : 0;
-
-          return {
-            name: item.groupX || "",
-            stress: score / 10 || 0, // 100점 만점을 10점 만점으로 변환
-            students: 0, // API에 학생 수가 없으면 0
-          };
-        });
-
-        console.log("📊 변환된 차트 데이터:", transformedData);
-        setData(transformedData.length > 0 ? transformedData : defaultData);
+            return {
+              name: name,
+              stress: score,
+              students: item.count || 0,
+            };
+          });
+          setData(transformedData);
+        }
       } catch (err) {
-        console.error("집단별 점수 데이터 로드 실패:", err);
-        setData(defaultData);
+        console.error("데이터 로드 실패, 기본값 유지", err);
       }
     };
 
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterType]);
 
-  // 전체 평균 계산 - useMemo로 최적화
   const averageStress = useMemo(() => {
     if (data.length === 0) return 0;
     return data.reduce((sum, item) => sum + item.stress, 0) / data.length;
   }, [data]);
 
-  // 차트 높이 계산: 표시 영역은 6개 기준으로 고정, 실제 차트는 데이터 길이에 따라
-  const maxVisibleItems = 6;
-  const itemHeight = 50; // 각 항목당 높이
-  const baseHeight = 100; // 기본 여백 및 축 높이
-  const visibleHeight = maxVisibleItems * itemHeight + baseHeight; // 표시 영역 높이
-  const chartHeight = data.length * itemHeight + baseHeight; // 실제 차트 높이
-
-  // 스트레스 수준에 따라 색상 결정
+  // [수정] 70점 이상일 때만 빨간색, 그 외 회색
   const getColor = (value) => {
-    if (value >= 7.0) return "#DC3D53"; // 빨간색 (7.0 이상)
-    return "#DCDFCF"; // 회색 (7.0 미만)
+    return value >= 70 ? "#EF4444" : "#E5E7EB";
+  };
+
+  const filterOptions = {
+    college: "단과대별 보기",
+    department: "학과별 보기",
+    grade: "학년별 보기",
   };
 
   return (
-    <Card className="card-chart comparison-card">
-      <CardHeader>
-        <div className="card-title-row">
+    <Card className="widget-card comparison-card-modern">
+      <CardHeader className="widget-header">
+        <div className="header-content">
           <div>
-            <CardTitle tag="h4">집단별 스트레스 수준</CardTitle>
-            <p className="card-category">최근 16주 기준</p>
+            <CardTitle tag="h5" className="widget-title">
+              집단별 스트레스 분석
+            </CardTitle>
+            <p className="widget-subtitle">항목 별 집단 비교</p>
           </div>
-          <div className="filter-dropdown-container">
+
+          <div className="filter-wrapper">
+            <Filter size={16} className="filter-icon" />
             <select
-              className="filter-dropdown"
+              className="modern-select"
               value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
+              onChange={handleFilterChange}
             >
-              <option value="college">단과대별</option>
-              <option value="department">학과별</option>
-              <option value="grade">학년별</option>
+              {Object.entries(filterOptions).map(([key, label]) => (
+                <option key={key} value={key}>
+                  {label}
+                </option>
+              ))}
             </select>
           </div>
         </div>
       </CardHeader>
-      <CardBody>
-        <div
-          className="chart-wrapper"
-          style={{ maxHeight: `${visibleHeight}px` }}
-        >
-          <div
-            className="chart-container"
-            style={{
-              height: `${chartHeight}px`,
-              marginTop: filterType === "grade" ? "30px" : "0",
-              marginLeft: "-20px",
-            }}
+
+      <CardBody className="widget-body chart-body-modern">
+        <ResponsiveContainer width="100%" height={380}>
+          <BarChart
+            data={data}
+            layout="vertical"
+            margin={{ top: 25, right: 20, left: 40, bottom: 0 }} // 상단 여백 조금 늘림(라벨 공간)
           >
-            <ResponsiveContainer width="100%" height={chartHeight}>
-              <BarChart
-                data={data}
-                layout="vertical"
-                margin={{
-                  top: 10,
-                  right: 40,
-                  left: 20,
-                  bottom: 10,
-                }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#E0E0E0" />
-                <XAxis
-                  type="number"
-                  domain={[0, 10]}
-                  stroke="#888888"
-                  tick={{ fill: "#555555", fontSize: 12 }}
-                />
-                <YAxis
-                  dataKey="name"
-                  type="category"
-                  stroke="#888888"
-                  tick={{ fill: "#555555", fontSize: 12 }}
-                  width={150}
-                  tickMargin={10}
-                  angle={0}
-                  interval={0}
-                />
-                <Tooltip
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      const data = payload[0].payload;
-                      return (
-                        <div className="custom-tooltip">
-                          <div className="tooltip-label">{data.name}</div>
-                          <div className="tooltip-item">
-                            <span>스트레스 수준:</span>
-                            <span
-                              style={{
-                                fontWeight: 600,
-                                color: getColor(data.stress),
-                              }}
-                            >
-                              {data.stress}
-                            </span>
-                          </div>
-                          <div className="tooltip-item">
-                            <span>학생 수:</span>
-                            <span style={{ fontWeight: 600 }}>
-                              {data.students.toLocaleString()}명
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              horizontal={false}
+              stroke="#E5E7EB"
+            />
 
-                {/* 전체 평균 기준선 */}
-                <ReferenceLine
-                  x={averageStress}
-                  stroke="#666666"
-                  strokeDasharray="3 3"
-                  strokeWidth={2}
-                  label={{
-                    value: `전체 평균 ${averageStress.toFixed(1)}`,
-                    position: "top",
-                    offset: 1,
-                    style: { fill: "#666666", fontSize: 11, fontWeight: 600 },
-                  }}
-                />
+            {/* [수정] 100점 만점 기준으로 변경 */}
+            <XAxis type="number" hide domain={[0, 100]} />
 
-                <Bar dataKey="stress" radius={[0, 8, 8, 0]}>
-                  {data.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={getColor(entry.stress)} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+            <YAxis
+              dataKey="name"
+              type="category"
+              tick={{ fontSize: 13, fill: "#4B5563", fontWeight: 500 }}
+              width={80}
+              axisLine={false}
+              tickLine={false}
+            />
+
+            <Tooltip
+              cursor={{ fill: "rgba(0,0,0,0.03)" }}
+              content={({ active, payload }) => {
+                if (active && payload && payload.length) {
+                  const d = payload[0].payload;
+
+                  let safeStress = Number(d.stress);
+                  if (isNaN(safeStress)) safeStress = 0;
+
+                  return (
+                    <div className="custom-tooltip-dark">
+                      <p className="tooltip-title">{d.name}</p>
+                      <div className="tooltip-row">
+                        <span>스트레스</span>
+                        {/* [수정] 70점 기준 색상 적용 */}
+                        <span
+                          className={`value ${
+                            safeStress >= 70 ? "danger" : ""
+                          }`}
+                        >
+                          {safeStress.toFixed(1)}점
+                        </span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span>학생 수</span>
+                        <span className="value">
+                          {(d.students || 0).toLocaleString()}명
+                        </span>
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              }}
+            />
+
+            {/* [수정] 'Avg' -> '평균 점수' 변경 */}
+            <ReferenceLine
+              x={averageStress}
+              stroke="#9CA3AF"
+              strokeDasharray="4 4"
+              label={{
+                value: `${averageStress.toFixed(1)}점`,
+                position: "top",
+                fill: "#9CA3AF",
+                fontSize: 11,
+                fontWeight: 600,
+                offset: 10, // 라벨을 선에서 약간 위로 띄움
+              }}
+            />
+
+            <Bar dataKey="stress" barSize={20} radius={[0, 4, 4, 0]}>
+              {data.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={getColor(entry.stress)} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
       </CardBody>
     </Card>
   );

@@ -4,10 +4,12 @@
  */
 
 // API 베이스 URL (환경 변수에서 가져오거나 기본값 사용)
-// MockAPI 테스트용: https://6921c361512fb4140be14416.mockapi.io/v3/api-docs
+// 개발 환경에서는 Vite 프록시 사용 (/api), 프로덕션에서는 직접 URL 사용
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
-  "https://6921c361512fb4140be14416.mockapi.io/v3/api-docs";
+  (import.meta.env.DEV
+    ? "/api"
+    : "https://port-0-naega-mia4lxbq959f2b64.sel3.cloudtype.app");
 
 // 디버깅용: 현재 사용 중인 API 베이스 URL 로그
 if (import.meta.env.DEV) {
@@ -31,7 +33,7 @@ if (import.meta.env.DEV) {
  */
 export const getTotalSummary = async (userId) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/total-summary`, {
+    const response = await fetch(`${API_BASE_URL}/dashboard/total-summary`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -81,7 +83,7 @@ export const getTotalSummary = async (userId) => {
  */
 export const getReserveList = async (userId) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/reserve-list`, {
+    const response = await fetch(`${API_BASE_URL}/dashboard/reserve-list`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -98,8 +100,20 @@ export const getReserveList = async (userId) => {
       );
     }
 
-    const data = await response.json();
-    return data;
+    // 응답 본문이 비어있는지 확인
+    const text = await response.text();
+    if (!text || text.trim() === "") {
+      console.warn("⚠️ reserve-list API 응답이 비어있습니다.");
+      return { counselingUsers: [] }; // 빈 배열 반환
+    }
+
+    try {
+      const data = JSON.parse(text);
+      return data;
+    } catch (parseError) {
+      console.error("JSON 파싱 실패:", parseError, "응답 텍스트:", text);
+      throw new Error("서버 응답을 파싱할 수 없습니다.");
+    }
   } catch (error) {
     console.error("상담 신청 목록 조회 실패:", error);
 
@@ -125,7 +139,7 @@ export const getReserveList = async (userId) => {
  */
 export const getFilteredScore = async (filter = 0, userId) => {
   try {
-    const url = `${API_BASE_URL}/filtered-score?filter=${filter}`;
+    const url = `${API_BASE_URL}/dashboard/filtered-score?filter=${filter}`;
     console.log(`🔗 API 호출: ${url} (filter=${filter})`);
 
     const response = await fetch(url, {
@@ -145,9 +159,23 @@ export const getFilteredScore = async (filter = 0, userId) => {
       );
     }
 
-    const data = await response.json();
-    console.log(`✅ API 응답 (filter=${filter}):`, data);
-    return data;
+    // 응답 본문이 비어있는지 확인
+    const text = await response.text();
+    if (!text || text.trim() === "") {
+      console.warn(
+        `⚠️ filtered-score API 응답이 비어있습니다. (filter=${filter})`
+      );
+      return { filteredGroups: [] }; // 빈 배열 반환
+    }
+
+    try {
+      const data = JSON.parse(text);
+      console.log(`✅ API 응답 (filter=${filter}):`, data);
+      return data;
+    } catch (parseError) {
+      console.error("JSON 파싱 실패:", parseError, "응답 텍스트:", text);
+      throw new Error("서버 응답을 파싱할 수 없습니다.");
+    }
   } catch (error) {
     console.error("집단별 점수 조회 실패:", error);
 
@@ -177,7 +205,7 @@ export const getFilteredScore = async (filter = 0, userId) => {
  */
 export const getAverageScore = async (userId) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/average-score`, {
+    const response = await fetch(`${API_BASE_URL}/dashboard/average-score`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -194,8 +222,20 @@ export const getAverageScore = async (userId) => {
       );
     }
 
-    const data = await response.json();
-    return data;
+    // 응답 본문이 비어있는지 확인
+    const text = await response.text();
+    if (!text || text.trim() === "") {
+      console.warn("⚠️ average-score API 응답이 비어있습니다.");
+      return { averageScores: [] }; // 빈 배열 반환
+    }
+
+    try {
+      const data = JSON.parse(text);
+      return data;
+    } catch (parseError) {
+      console.error("JSON 파싱 실패:", parseError, "응답 텍스트:", text);
+      throw new Error("서버 응답을 파싱할 수 없습니다.");
+    }
   } catch (error) {
     console.error("주차별 평균 심리 점수 추이 조회 실패:", error);
 
