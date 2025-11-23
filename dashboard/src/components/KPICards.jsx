@@ -48,10 +48,10 @@ function KPICards() {
         {
           title: "전체 학생 평균 우울 점수",
           value: kpiData.averageScore
-            ? parseFloat(kpiData.averageScore).toFixed(1)
-            : "6.2",
-          unit: "/ 10",
-          changeRaw: kpiData.averageScoreChanged || "-0.3",
+            ? (parseFloat(kpiData.averageScore) * 10).toFixed(1)
+            : "62",
+          unit: "/ 100",
+          changeRaw: kpiData.averageScoreChanged || "-3",
           // 점수가 낮아지면 좋은 것(Positive) -> Green
           isPositiveTrend: (kpiData.averageScoreChanged || "-").startsWith("-"),
           icon: Activity,
@@ -94,9 +94,9 @@ function KPICards() {
         // 로딩/에러 시 기본값
         {
           title: "전체 학생 평균 우울 점수",
-          value: "6.2",
-          unit: "/ 10",
-          changeRaw: "-0.3",
+          value: "62",
+          unit: "/ 100",
+          changeRaw: "-3",
           isPositiveTrend: true,
           icon: Activity,
           color: "#FF6B00",
