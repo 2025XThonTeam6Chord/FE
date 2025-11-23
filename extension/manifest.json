@@ -6,6 +6,14 @@
     "permissions": [
         "activeTab"
     ],
+    "host_permissions": [
+        "https://port-0-naega-mia4lxbq959f2b64.sel3.cloudtype.app/*",
+        "https://eclass.dongguk.edu/*",
+        "http://localhost/*"
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
     "action": {
         "default_popup": "popup.html"
     },

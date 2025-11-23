@@ -10,13 +10,23 @@ import { motion } from 'framer-motion';
 import AnimatedCounter from './AnimatedCounter';
 import './PsychologicalBalance.css';
 
-function PsychologicalBalance() {
+function PsychologicalBalance({ data: apiData }) {
+  // API 데이터가 없으면 로딩 중 또는 기본값 사용
+  const balanceData = apiData || {
+    emotion: 65,
+    sociality: 45,
+    sleep: 38,
+    stress: 72,
+    resilience: 55,
+  };
+
+  // API 응답을 차트 데이터 형식으로 변환
   const data = [
-    { subject: '정서', value: 65, fullMark: 100, color: '#ffa726' },
-    { subject: '사회성', value: 45, fullMark: 100, color: '#ff69b4' },
-    { subject: '수면', value: 38, fullMark: 100, color: '#ff0000' },
-    { subject: '스트레스', value: 72, fullMark: 100, color: '#ff8c00' },
-    { subject: '회복력', value: 55, fullMark: 100, color: '#ffcc99' },
+    { subject: '정서', value: balanceData.emotion || 0, fullMark: 100, color: '#ffa726' },
+    { subject: '사회성', value: balanceData.sociality || 0, fullMark: 100, color: '#ff69b4' },
+    { subject: '수면', value: balanceData.sleep || 0, fullMark: 100, color: '#ff0000' },
+    { subject: '스트레스', value: balanceData.stress || 0, fullMark: 100, color: '#ff8c00' },
+    { subject: '회복력', value: balanceData.resilience || 0, fullMark: 100, color: '#ffcc99' },
   ];
 
   const cardVariants = {

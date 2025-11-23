@@ -1,10 +1,24 @@
-import { useState, useEffect } from 'react';
 import { FaCloudSun } from 'react-icons/fa';
 import { motion } from 'framer-motion';
+import GaugeChart from 'react-gauge-chart';
 import AnimatedCounter from './AnimatedCounter';
 import './ReportSummary.css';
 
 function ReportSummary({ summaryData, isLoading }) {
+  // 위험도에 따른 상태 및 색상 결정
+  const getDangerStatus = (dangerRate) => {
+    if (dangerRate <= 40) {
+      return { label: '안정', color: '#10B981', bgColor: '#D1FAE5' }; // 초록색
+    } else if (dangerRate <= 70) {
+      return { label: '주의', color: '#F59E0B', bgColor: '#FEF3C7' }; // 노란색
+    } else {
+      return { label: '고위험', color: '#EF4444', bgColor: '#FEE2E2' }; // 빨간색
+    }
+  };
+
+  const dangerRate = summaryData?.dangerRate || 0;
+  const dangerStatus = getDangerStatus(dangerRate);
+  const answerCount = summaryData?.answerCount || 0;
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -29,17 +43,6 @@ function ReportSummary({ summaryData, isLoading }) {
     },
   };
 
-  const scoreVariants = {
-    hidden: { opacity: 0, scale: 0.8 },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      transition: {
-        duration: 0.5,
-        ease: [0.34, 1.56, 0.64, 1],
-      },
-    },
-  };
 
   return (
     <motion.div
@@ -71,7 +74,7 @@ function ReportSummary({ summaryData, isLoading }) {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              김다독님의 마음 날씨
+              윤찬영님의 마음 날씨
             </motion.h1>
           </div>
         </div>
@@ -86,24 +89,54 @@ function ReportSummary({ summaryData, isLoading }) {
         </p>
       </motion.div>
 
-      <motion.div className="summary-scores" variants={containerVariants}>
-        <motion.div className="score-item" variants={scoreVariants} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-          <div className="score-value">
-            <AnimatedCounter value={55} />
+      {/* 카드 그리드: 각 카드가 독립적으로 분리 */}
+      <div className="summary-cards-grid">
+        {/* 위험도 계기판 카드 */}
+        <div className="danger-gauge-card">
+          {/* 왼쪽: 계기판 */}
+          <div className="gauge-section">
+            <div className="gauge-container">
+              <GaugeChart
+                id="danger-gauge"
+                nrOfLevels={3}
+                arcsLength={[0.4, 0.3, 0.3]}
+                colors={['#10B981', '#F59E0B', '#EF4444']}
+                percent={dangerRate / 100}
+                arcPadding={0.02}
+                cornerRadius={3}
+                textColor="#111111"
+                needleColor="#555555"
+                needleBaseColor="#888888"
+                formatTextValue={() => ''}
+                hideText={true}
+                animate={true}
+                animDelay={0}
+                animateDuration={2000}
+                marginInPercent={0.03}
+              />
+            </div>
           </div>
-          <div className="score-label">종합 점수</div>
-        </motion.div>
-        <motion.div className="score-item positive" variants={scoreVariants} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-          <div className="score-value">+<AnimatedCounter value={8} /></div>
-          <div className="score-label">지난주 대비</div>
-        </motion.div>
-        <motion.div className="score-item" variants={scoreVariants} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-          <div className="score-value">
-            <AnimatedCounter value={summaryData?.answerCount || 0} />
+
+          {/* 오른쪽: 점수와 라벨 */}
+          <div className="gauge-value-section">
+            <div
+              className="gauge-value"
+              style={{ color: dangerStatus.color }}
+            >
+              <AnimatedCounter value={dangerRate} />
+            </div>
+            <div className="score-label">위험도</div>
           </div>
-          <div className="score-label">답변 수</div>
-        </motion.div>
-      </motion.div>
+        </div>
+
+        {/* 응답 문항수 카드 */}
+        <div className="score-item">
+          <div className="score-value">
+            <AnimatedCounter value={answerCount} />
+          </div>
+          <div className="score-label">응답 문항수</div>
+        </div>
+      </div>
     </motion.div>
   );
 }

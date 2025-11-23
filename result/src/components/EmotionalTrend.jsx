@@ -11,15 +11,21 @@ import { FaLightbulb } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import './EmotionalTrend.css';
 
-function EmotionalTrend() {
-  const data = [
-    { day: '1일', score: 47 },
-    { day: '4일', score: 52 },
-    { day: '7일', score: 58 },
-    { day: '10일', score: 63 },
-    { day: '13일', score: 67 },
-    { day: '14일', score: 70 },
-  ];
+function EmotionalTrend({ data: apiData, isLoading }) {
+  // API 데이터가 없으면 기본값 사용
+  const trendData = apiData || {
+    dates: ['1일', '4일', '7일', '10일', '13일', '14일'],
+    scores: [47, 52, 58, 63, 67, 70],
+    trendMessage: '긍정적인 변화가 감지되었어요. 최근 일주일간 감정 점수가 상승 추세를 보이고 있습니다. 현재의 긍정적인 패턴을 유지하시면 더 나은 심리 상태를 경험하실 수 있어요.',
+  };
+
+  // API 응답을 차트 데이터 형식으로 변환
+  const data = trendData.dates?.map((date, index) => ({
+    day: date,
+    score: trendData.scores?.[index] || 0,
+  })) || [];
+
+  const trendMessage = trendData.trendMessage || '긍정적인 변화가 감지되었어요. 최근 일주일간 감정 점수가 상승 추세를 보이고 있습니다.';
 
   const cardVariants = {
     hidden: { opacity: 0, y: 30 },
@@ -142,8 +148,7 @@ function EmotionalTrend() {
           <FaLightbulb className="insight-icon" />
         </motion.div>
         <p className="insight-text">
-          <strong>긍정적인 변화가 감지되었어요.</strong> 최근 일주일간 감정 점수가 상승 추세를 보이고 있습니다. 현재의 긍정적인
-          패턴을 유지하시면 더 나은 심리 상태를 경험하실 수 있어요.
+          {isLoading ? '트렌드 분석 중...' : trendMessage}
         </p>
       </motion.div>
     </motion.div>
