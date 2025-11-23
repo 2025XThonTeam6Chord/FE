@@ -151,88 +151,93 @@ function ComparisonChart() {
       </CardHeader>
 
       <CardBody className="widget-body chart-body-modern">
-        <ResponsiveContainer width="100%" height={380}>
-          <BarChart
-            data={data}
-            layout="vertical"
-            margin={{ top: 25, right: 20, left: 40, bottom: 0 }} // 상단 여백 조금 늘림(라벨 공간)
+        <div className={`chart-wrapper ${data.length > 6 ? "scrollable" : ""}`}>
+          <ResponsiveContainer
+            width="100%"
+            height={data.length > 6 ? data.length * 60 : 380}
           >
-            <CartesianGrid
-              strokeDasharray="3 3"
-              horizontal={false}
-              stroke="#E5E7EB"
-            />
+            <BarChart
+              data={data}
+              layout="vertical"
+              margin={{ top: 25, right: 20, left: 40, bottom: 0 }} // 상단 여백 조금 늘림(라벨 공간)
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                horizontal={false}
+                stroke="#E5E7EB"
+              />
 
-            {/* [수정] 100점 만점 기준으로 변경 */}
-            <XAxis type="number" hide domain={[0, 100]} />
+              {/* [수정] 100점 만점 기준으로 변경 */}
+              <XAxis type="number" hide domain={[0, 100]} />
 
-            <YAxis
-              dataKey="name"
-              type="category"
-              tick={{ fontSize: 13, fill: "#4B5563", fontWeight: 500 }}
-              width={80}
-              axisLine={false}
-              tickLine={false}
-            />
+              <YAxis
+                dataKey="name"
+                type="category"
+                tick={{ fontSize: 13, fill: "#4B5563", fontWeight: 500 }}
+                width={80}
+                axisLine={false}
+                tickLine={false}
+              />
 
-            <Tooltip
-              cursor={{ fill: "rgba(0,0,0,0.03)" }}
-              content={({ active, payload }) => {
-                if (active && payload && payload.length) {
-                  const d = payload[0].payload;
+              <Tooltip
+                cursor={{ fill: "rgba(0,0,0,0.03)" }}
+                content={({ active, payload }) => {
+                  if (active && payload && payload.length) {
+                    const d = payload[0].payload;
 
-                  let safeStress = Number(d.stress);
-                  if (isNaN(safeStress)) safeStress = 0;
+                    let safeStress = Number(d.stress);
+                    if (isNaN(safeStress)) safeStress = 0;
 
-                  return (
-                    <div className="custom-tooltip-dark">
-                      <p className="tooltip-title">{d.name}</p>
-                      <div className="tooltip-row">
-                        <span>스트레스</span>
-                        {/* [수정] 70점 기준 색상 적용 */}
-                        <span
-                          className={`value ${
-                            safeStress >= 70 ? "danger" : ""
-                          }`}
-                        >
-                          {safeStress.toFixed(1)}점
-                        </span>
+                    return (
+                      <div className="custom-tooltip-dark">
+                        <p className="tooltip-title">{d.name}</p>
+                        <div className="tooltip-row">
+                          <span>스트레스</span>
+                          {/* [수정] 70점 기준 색상 적용 */}
+                          <span
+                            className={`value ${
+                              safeStress >= 70 ? "danger" : ""
+                            }`}
+                          >
+                            {safeStress.toFixed(1)}점
+                          </span>
+                        </div>
+                        <div className="tooltip-row">
+                          <span>학생 수</span>
+                          <span className="value">
+                            {(d.students || 0).toLocaleString()}명
+                          </span>
+                        </div>
                       </div>
-                      <div className="tooltip-row">
-                        <span>학생 수</span>
-                        <span className="value">
-                          {(d.students || 0).toLocaleString()}명
-                        </span>
-                      </div>
-                    </div>
-                  );
-                }
-                return null;
-              }}
-            />
+                    );
+                  }
+                  return null;
+                }}
+              />
 
-            {/* [수정] 'Avg' -> '평균 점수' 변경 */}
-            <ReferenceLine
-              x={averageStress}
-              stroke="#9CA3AF"
-              strokeDasharray="4 4"
-              label={{
-                value: `${averageStress.toFixed(1)}점`,
-                position: "top",
-                fill: "#9CA3AF",
-                fontSize: 11,
-                fontWeight: 600,
-                offset: 10, // 라벨을 선에서 약간 위로 띄움
-              }}
-            />
+              {/* [수정] 'Avg' -> '평균 점수' 변경 */}
+              <ReferenceLine
+                x={averageStress}
+                stroke="#9CA3AF"
+                strokeDasharray="4 4"
+                label={{
+                  value: `${averageStress.toFixed(1)}점`,
+                  position: "top",
+                  fill: "#9CA3AF",
+                  fontSize: 11,
+                  fontWeight: 600,
+                  offset: 10, // 라벨을 선에서 약간 위로 띄움
+                }}
+              />
 
-            <Bar dataKey="stress" barSize={20} radius={[0, 4, 4, 0]}>
-              {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={getColor(entry.stress)} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+              <Bar dataKey="stress" barSize={20} radius={[0, 4, 4, 0]}>
+                {data.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={getColor(entry.stress)} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </CardBody>
     </Card>
   );
