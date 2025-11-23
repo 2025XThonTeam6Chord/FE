@@ -1,27 +1,9 @@
-import { useState, useEffect } from 'react';
 import { FaHeart } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import PDFExportButton from './PDFExportButton';
 import './Header.css';
 
 function Header() {
-  const [currentTime, setCurrentTime] = useState(new Date());
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  const formatTime = (date) => {
-    return date.toLocaleTimeString('ko-KR', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    });
-  };
 
   return (
     <motion.header
@@ -49,7 +31,7 @@ function Header() {
         >
           <FaHeart className="header-logo-icon" />
         </motion.div>
-        <span className="header-logo-text">다독</span>
+        <span className="header-logo-text">결과 리포트</span>
       </motion.div>
       <motion.div
         className="header-right"
@@ -59,7 +41,6 @@ function Header() {
         style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
       >
         <PDFExportButton />
-        <div className="header-time">{formatTime(currentTime)}</div>
       </motion.div>
     </motion.header>
   );

@@ -3,7 +3,13 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, Typography, Box } from '@mui/material';
 import './DetailedAnalysis.css';
 
-function DetailedAnalysis() {
+function DetailedAnalysis({ data: apiData, isLoading }) {
+  // API 데이터가 없으면 기본값 사용
+  const detailMessages = apiData || {
+    lowestMessage: '수면 영역이 38점으로 가장 낮게 측정되었습니다. 이 부분에 대한 관심이 필요합니다.',
+    highestMessage: '스트레스 영역이 72점으로 가장 높게 나타났습니다. 이 강점을 활용해보세요.',
+    overallMessage: '전반적으로 약간의 불균형이 감지되었습니다. 수면과 사회성 영역의 개선이 전체적인 심리 균형에 도움이 될 수 있습니다.',
+  };
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -129,8 +135,7 @@ function DetailedAnalysis() {
                       fontSize: '14px',
                     }}
                   >
-                    수면 영역이 38점으로 가장 낮게 측정되었습니다. 이 부분에 대한 관심이
-                    필요합니다.
+                    {isLoading ? '분석 중...' : detailMessages.lowestMessage}
                   </Typography>
                 </Box>
               </Box>
@@ -191,7 +196,7 @@ function DetailedAnalysis() {
                       fontSize: '14px',
                     }}
                   >
-                    스트레스 영역이 72점으로 가장 높게 나타났습니다. 이 강점을 활용해보세요.
+                    {isLoading ? '분석 중...' : detailMessages.highestMessage}
                   </Typography>
                 </Box>
               </Box>
@@ -252,8 +257,7 @@ function DetailedAnalysis() {
                       fontSize: '14px',
                     }}
                   >
-                    전반적으로 약간의 불균형이 감지되었습니다. 수면과 사회성 영역의 개선이
-                    전체적인 심리 균형에 도움이 될 수 있습니다.
+                    {isLoading ? '분석 중...' : detailMessages.overallMessage}
                   </Typography>
                 </Box>
               </Box>
