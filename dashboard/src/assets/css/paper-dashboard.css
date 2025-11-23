@@ -1954,6 +1954,7 @@ a[data-toggle="collapse"][aria-expanded="true"] .caret,
   .navbar .navbar-brand {
     text-transform: capitalize;
     font-size: 20px;
+    font-weight: 700;
     padding-top: 0.5rem;
     padding-bottom: 0.5rem;
     line-height: 1.625rem; }
@@ -3230,6 +3231,7 @@ License - nucleoapp.com/license/
       position: relative; }
     .sidebar .nav p,
     .off-canvas-sidebar .nav p {
+      font-weight: 700;
       margin-bottom: 0; }
     .sidebar .nav .collapse .nav,
     .sidebar .nav .collapsing .nav,
@@ -3306,7 +3308,7 @@ License - nucleoapp.com/license/
       font-size: 1rem;
       color: #FFFFFF;
       text-decoration: none;
-      font-weight: 400;
+      font-weight: 700;
       line-height: 30px;
       overflow: hidden; }
   .sidebar .logo-tim,
@@ -3519,7 +3521,7 @@ License - nucleoapp.com/license/
   height: 380px; }
 
 .footer {
-  padding: 24px 0; }
+  padding: 0; }
   .footer.footer-default {
     background-color: #f2f2f2; }
   .footer nav {
@@ -3875,7 +3877,9 @@ License - nucleoapp.com/license/
   .card-plain:not(.card-subcategories).card-body {
     padding-left: 0;
     padding-right: 0; }
-
+.card-chart {
+  margin-top: 20px;
+}
 .card-chart .card-header .card-title {
   margin-top: 10px;
   margin-bottom: 0; }

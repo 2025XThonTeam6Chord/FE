@@ -1,123 +1,192 @@
+import { useState, useEffect } from "react";
 import {
-  FaUsers,
-  FaExclamationTriangle,
-  FaChartLine,
-  FaCalendarCheck,
-} from "react-icons/fa";
-import { ResponsiveContainer, Area, AreaChart } from "recharts";
-import { Card, CardBody, CardFooter, CardTitle, Row, Col } from "reactstrap";
+  Activity, // 차트 라인 대체
+  AlertTriangle, // 경고 대체
+  Users, // 사용자 대체
+  CalendarCheck, // 일정 대체
+  Triangle, // 뱃지용 삼각형
+} from "lucide-react";
+import { Card, CardBody, Row, Col } from "reactstrap";
+import { getTotalSummary } from "../../../api/dashboard/dashboardApi";
 import "./KPICards.css";
 
 function KPICards() {
-  // Sparkline 데이터 생성 (최근 7일)
-  const generateSparklineData = (trend) => {
-    const data = [];
-    let baseValue = 50;
-    for (let i = 0; i < 7; i++) {
-      if (trend === "up") {
-        baseValue += Math.random() * 10 - 2;
-      } else if (trend === "down") {
-        baseValue -= Math.random() * 8 - 1;
-      } else {
-        baseValue += Math.random() * 6 - 3;
+  const [kpiData, setKpiData] = useState(null);
+
+  useEffect(() => {
+    const fetchKPIData = async () => {
+      try {
+        const userId = "admin"; // 실제 구현시 Auth Context 등에서 가져옴
+        const response = await getTotalSummary(userId);
+
+        // null이나 빈 응답 처리
+        if (!response) {
+          console.warn("⚠️ KPI 데이터가 없습니다. 기본값을 사용합니다.");
+          setKpiData(null); // null이면 기본값 사용
+          return;
+        }
+
+        const data = Array.isArray(response) ? response[0] : response;
+        setKpiData(data);
+      } catch (err) {
+        console.error("KPI 데이터 로드 실패:", err);
+        setKpiData(null); // 에러 시 기본값 사용
       }
-      data.push({ value: Math.max(0, Math.min(100, baseValue)) });
-    }
-    return data;
+    };
+    fetchKPIData();
+  }, []);
+
+  // 데이터 전처리 헬퍼: 부호(+, -) 제거 및 숫자만 반환
+  const formatChangeValue = (val) => {
+    if (!val) return "0";
+    return val.replace(/[+-]/g, "").trim();
   };
 
-  const kpis = [
-    {
-      title: "전체 학생 평균 우울 점수",
-      value: "6.2",
-      unit: "/ 10",
-      change: "-0.3",
-      changeType: "positive",
-      changePercent: "-4.6%",
-      icon: FaChartLine,
-      color: "#FF6B00",
-      sparklineData: generateSparklineData("down"),
-      status: "warning", // 괜찮은 상황 (중간 수준)
-    },
-    {
-      title: "고위험군 학생 수",
-      value: "23",
-      unit: "명",
-      change: "+2",
-      changeType: "negative",
-      changePercent: "+9.5%",
-      icon: FaExclamationTriangle,
-      color: "#EF4444",
-      sparklineData: generateSparklineData("up"),
-      status: "danger", // 안 좋은 상황 (증가)
-    },
-    {
-      title: "이번 주 응답률",
-      value: "68.5",
-      unit: "%",
-      change: "+5.2%",
-      changeType: "positive",
-      changePercent: "+8.2%",
-      icon: FaUsers,
-      color: "#10B981",
-      sparklineData: generateSparklineData("up"),
-      status: "success", // 좋은 상황 (증가)
-    },
-    {
-      title: "상담 신청 건수",
-      value: "12",
-      unit: "건",
-      change: "+3",
-      changeType: "neutral",
-      changePercent: "+33.3%",
-      icon: FaCalendarCheck,
-      color: "#F59E0B",
-      sparklineData: generateSparklineData("neutral"),
-      status: "success", // 좋은 상황 (증가)
-    },
-  ];
-
-  const getIconClass = (color) => {
-    if (color === "#EF4444") return "text-danger";
-    if (color === "#10B981") return "text-success";
-    if (color === "#F59E0B") return "text-warning";
-    return "text-primary";
-  };
+  // API 데이터를 기반으로 KPI 배열 생성
+  const kpis = kpiData
+    ? [
+        {
+          title: "전체 학생 평균 우울 점수",
+          value: kpiData.averageScore
+            ? (parseFloat(kpiData.averageScore) * 10).toFixed(1)
+            : "62",
+          unit: "/ 100",
+          changeRaw: kpiData.averageScoreChanged || "-3",
+          // 점수가 낮아지면 좋은 것(Positive) -> Green
+          isPositiveTrend: (kpiData.averageScoreChanged || "-").startsWith("-"),
+          icon: Activity,
+          color: "#FF6B00",
+        },
+        {
+          title: "고위험군 학생 수",
+          value: String(kpiData.highRiskNum || 23),
+          unit: "명",
+          changeRaw: kpiData.highRiskNumChanged || "+2",
+          // 수가 늘어나면 나쁜 것(Negative) -> Red
+          isPositiveTrend: (kpiData.highRiskNumChanged || "+").startsWith("-"),
+          icon: AlertTriangle,
+          color: "#EF4444",
+        },
+        {
+          title: "이번 주 응답률",
+          value: kpiData.responsNum
+            ? parseFloat(kpiData.responsNum).toFixed(1)
+            : "68.5",
+          unit: "%",
+          changeRaw: kpiData.responsNumChanged || "+5.2%",
+          // 응답률은 높으면 좋은 것
+          isPositiveTrend: !(kpiData.responsNumChanged || "+").startsWith("-"),
+          icon: Users,
+          color: "#10B981",
+        },
+        {
+          title: "상담 신청 건수",
+          value: String(kpiData.counselingReserveCount || 12),
+          unit: "건",
+          changeRaw: kpiData.counselingReserveCountChanged || "+3",
+          // 상담 신청은 중립/긍정으로 해석 (여기선 긍정 취급)
+          isPositiveTrend: true,
+          icon: CalendarCheck,
+          color: "#F59E0B",
+        },
+      ]
+    : [
+        // 로딩/에러 시 기본값
+        {
+          title: "전체 학생 평균 우울 점수",
+          value: "62",
+          unit: "/ 100",
+          changeRaw: "-3",
+          isPositiveTrend: true,
+          icon: Activity,
+          color: "#FF6B00",
+        },
+        {
+          title: "고위험군 학생 수",
+          value: "23",
+          unit: "명",
+          changeRaw: "+2",
+          isPositiveTrend: false,
+          icon: AlertTriangle,
+          color: "#EF4444",
+        },
+        {
+          title: "이번 주 응답률",
+          value: "68.5",
+          unit: "%",
+          changeRaw: "+5.2%",
+          isPositiveTrend: true,
+          icon: Users,
+          color: "#10B981",
+        },
+        {
+          title: "상담 신청 건수",
+          value: "12",
+          unit: "건",
+          changeRaw: "+3",
+          isPositiveTrend: true,
+          icon: CalendarCheck,
+          color: "#F59E0B",
+        },
+      ];
 
   return (
     <Row>
       {kpis.map((kpi, index) => {
-        const IconComponent = kpi.icon;
-        const iconClass = getIconClass(kpi.color);
-        const statusClass = `kpi-status-${kpi.status}`;
+        const MainIcon = kpi.icon;
+        // 변화량 텍스트에서 부호 제거
+        const changeText = formatChangeValue(kpi.changeRaw);
+
+        // 긍정적이면 초록, 부정적이면 빨강
+        const badgeClass = kpi.isPositiveTrend
+          ? "kpi-badge-green"
+          : "kpi-badge-red";
+
+        // 상승/하락 판단 (단순 문자열 기준)
+        // 실제로는 데이터 의미에 따라 다르지만, 여기선 +, - 기호로 방향 결정
+        const isDecrease = kpi.changeRaw.includes("-");
+
         return (
-          <Col lg="3" md="6" sm="6" key={index}>
-            <Card className={`card-stats ${statusClass}`}>
+          <Col lg="3" md="6" sm="6" key={index} className="mb-4">
+            <Card className="kpi-card-image-style">
               <CardBody>
-                <Row>
-                  <Col md="4" xs="5">
-                    <div className={`icon-big text-center ${iconClass}`}>
-                      <IconComponent size={24} />
-                    </div>
-                  </Col>
-                  <Col md="8" xs="7">
-                    <div className="numbers">
-                      <p className="card-category">{kpi.title}</p>
-                      <CardTitle tag="p">
-                        {kpi.value}
-                        {kpi.unit}
-                      </CardTitle>
-                      <p />
-                    </div>
-                  </Col>
-                </Row>
-              </CardBody>
-              <CardFooter>
-                <hr />
-                <div className="stats">
-                  <i className="fas fa-sync-alt" /> 지난주 대비 {kpi.change}
+                <div className="kpi-badge-container">
+                  <div className={`kpi-badge ${badgeClass}`}>
+                    {/* Lucide Triangle 아이콘 (fill 속성으로 채움) */}
+                    <Triangle
+                      size={10}
+                      className={`kpi-badge-icon ${
+                        isDecrease ? "rotate-180" : ""
+                      }`}
+                      fill="currentColor"
+                      strokeWidth={0} // 외곽선 없이 채우기만
+                    />
+                    <span>{changeText}</span>
+                  </div>
+
+                  {/* 지난주 대비 텍스트 (선택 사항) */}
+                  <span className="kpi-badge-label">지난주 대비</span>
                 </div>
-              </CardFooter>
+
+                <p className="kpi-title-image">{kpi.title}</p>
+
+                <div className="kpi-content-wrapper">
+                  <div className="kpi-value-image">
+                    <span className="kpi-value-number-image">
+                      {kpi.value}
+                      <span className="kpi-unit-image">{kpi.unit}</span>
+                    </span>
+                  </div>
+
+                  {/* 메인 아이콘: 색상 직접 제어 */}
+                  <div
+                    className="kpi-icon-bg"
+                    style={{ backgroundColor: `${kpi.color}15` }} // 투명도 15% 적용
+                  >
+                    <MainIcon size={24} color={kpi.color} strokeWidth={2} />
+                  </div>
+                </div>
+              </CardBody>
             </Card>
           </Col>
         );

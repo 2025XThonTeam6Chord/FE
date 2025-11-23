@@ -1,200 +1,310 @@
-import './RiskStudentList.css';
+import { useState, useEffect } from "react";
+import { getReserveList } from "../../../api/dashboard/dashboardApi";
+import { FaLock } from "react-icons/fa";
+import { Calendar, ChevronRight } from "lucide-react"; // 모던 아이콘 추가
+import {
+  Modal,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Button,
+  Input,
+  Card,
+  CardHeader,
+  CardBody,
+  CardTitle,
+} from "reactstrap";
+import "./RiskStudentList.css";
 
 function RiskStudentList() {
-  const riskStudents = [
+  const [riskStudents, setRiskStudents] = useState([]);
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authCode, setAuthCode] = useState("");
+  const [authError, setAuthError] = useState("");
+
+  // 기본 데이터 (API 실패 시 사용) - 100점 만점
+  const getDefaultData = () => [
     {
       id: 1,
-      name: '김○○',
-      studentId: '2020123456',
-      college: '공과대학',
-      department: '컴퓨터공학과',
-      riskLevel: '심각',
-      riskScore: 9.2,
-      symptoms: ['불면증', '우울감', '자해 사고'],
-      lastResponse: '2024.01.15',
-      counselingStatus: '대기중'
+      name: "김컴공",
+      studentId: "20210001",
+      college: "공과대학",
+      dept: "컴퓨터공학과",
+      riskLevel: "critical", // 심각
+      riskScore: 92,
+      date: "2025.11.22",
     },
     {
       id: 2,
-      name: '이○○',
-      studentId: '2021123456',
-      college: '의과대학',
-      department: '의학과',
-      riskLevel: '심각',
-      riskScore: 8.8,
-      symptoms: ['극도의 불안', '섭식 장애', '집중력 저하'],
-      lastResponse: '2024.01.14',
-      counselingStatus: '진행중'
+      name: "이경영",
+      studentId: "20210002",
+      college: "경영대학",
+      dept: "경영학과",
+      riskLevel: "warning", // 주의
+      riskScore: 78,
+      date: "2025.11.22",
     },
     {
       id: 3,
-      name: '박○○',
-      studentId: '2022123456',
-      college: '인문대학',
-      department: '국어국문학과',
-      riskLevel: '주의',
-      riskScore: 7.5,
-      symptoms: ['불안감', '스트레스', '수면 부족'],
-      lastResponse: '2024.01.15',
-      counselingStatus: '대기중'
+      name: "박예술",
+      studentId: "20230045",
+      college: "예술대학",
+      dept: "시각디자인학과",
+      riskLevel: "normal", // 정상
+      riskScore: 45,
+      date: "2025.11.21",
     },
     {
       id: 4,
-      name: '최○○',
-      studentId: '2020127890',
-      college: '경영대학',
-      department: '경영학과',
-      riskLevel: '주의',
-      riskScore: 7.2,
-      symptoms: ['우울감', '학업 스트레스'],
-      lastResponse: '2024.01.13',
-      counselingStatus: '완료'
+      name: "최의학",
+      studentId: "20205512",
+      college: "의과대학",
+      dept: "의예과",
+      riskLevel: "critical",
+      riskScore: 95,
+      date: "2025.11.20",
     },
-    {
-      id: 5,
-      name: '정○○',
-      studentId: '2021127890',
-      college: '공과대학',
-      department: '전기공학과',
-      riskLevel: '주의',
-      riskScore: 7.0,
-      symptoms: ['불안감', '피로'],
-      lastResponse: '2024.01.15',
-      counselingStatus: '대기중'
-    },
-    {
-      id: 6,
-      name: '강○○',
-      studentId: '2022127890',
-      college: '예술대학',
-      department: '음악과',
-      riskLevel: '주의',
-      riskScore: 6.8,
-      symptoms: ['스트레스', '집중력 저하'],
-      lastResponse: '2024.01.12',
-      counselingStatus: '진행중'
-    }
   ];
 
-  const getRiskBadgeClass = (level) => {
-    return level === '심각' ? 'risk-badge-critical' : 'risk-badge-warning';
+  useEffect(() => {
+    if (!isUnlocked) return;
+
+    const fetchData = async () => {
+      try {
+        const userId = "admin";
+        const response = await getReserveList(userId);
+
+        let dataArray = [];
+        if (Array.isArray(response)) {
+          dataArray = response;
+        } else if (
+          response?.counselingUsers &&
+          Array.isArray(response.counselingUsers)
+        ) {
+          dataArray = response.counselingUsers;
+        } else if (response && typeof response === "object") {
+          dataArray = [response];
+        }
+
+        const transformedData = dataArray.map((user, index) => {
+          // API에서 받은 점수를 100점 만점으로 변환 (이미 100점 만점이면 그대로 사용)
+          let rawScore =
+            user.riskScore || user.score || 70 + Math.random() * 20;
+          // 10점 만점인 경우 100점 만점으로 변환
+          if (rawScore <= 10) {
+            rawScore = rawScore * 10;
+          }
+          const riskScore = parseFloat(rawScore.toFixed(1));
+
+          // 점수에 따라 레벨(클래스명) 매핑 - 100점 만점 기준
+          let riskLevel = "normal";
+          if (riskScore >= 80) riskLevel = "critical";
+          else if (riskScore >= 70) riskLevel = "warning";
+
+          const requestDate =
+            user.requestDate ||
+            new Date().toISOString().split("T")[0].replace(/-/g, ".");
+
+          return {
+            id: index + 1,
+            name: user.name || "이름 없음",
+            studentId: user.userKey || user.studentId || "",
+            college: user.univ || user.college || "",
+            dept: user.major || user.department || "",
+            riskLevel: riskLevel,
+            riskScore: riskScore,
+            date: requestDate,
+          };
+        });
+
+        setRiskStudents(
+          transformedData.length > 0 ? transformedData : getDefaultData()
+        );
+      } catch (err) {
+        console.error("로드 실패:", err);
+        setRiskStudents(getDefaultData());
+      }
+    };
+
+    fetchData();
+  }, [isUnlocked]);
+
+  // --- 핸들러 ---
+  const handleLockClick = () => {
+    setShowAuthModal(true);
+    setAuthCode("");
+    setAuthError("");
   };
 
-  const getCounselingBadgeClass = (status) => {
-    if (status === '진행중') return 'counseling-badge-progress';
-    if (status === '완료') return 'counseling-badge-completed';
-    return 'counseling-badge-waiting';
+  const handleAuthSubmit = () => {
+    const validCodes = ["ADMIN123", "1234", "admin"];
+    if (
+      validCodes.includes(authCode.toUpperCase()) ||
+      validCodes.includes(authCode)
+    ) {
+      setIsUnlocked(true);
+      setShowAuthModal(false);
+    } else {
+      setAuthError("인증코드가 올바르지 않습니다.");
+    }
+  };
+
+  const handleModalClose = () => {
+    setShowAuthModal(false);
+    setAuthCode("");
+    setAuthError("");
+  };
+
+  // --- UI 헬퍼 ---
+  const getRiskBadge = (level) => {
+    switch (level) {
+      case "critical":
+        return <span className="badge-modern critical">심각</span>;
+      case "warning":
+        return <span className="badge-modern warning">주의</span>;
+      default:
+        return <span className="badge-modern normal">정상</span>;
+    }
+  };
+
+  const getScoreColor = (score) => {
+    // 100점 만점 기준
+    if (score >= 80) return "#EF4444";
+    if (score >= 70) return "#F59E0B";
+    return "#10B981";
   };
 
   return (
-    <div className="card risk-list-card">
-      <div className="card-header">
-        <div className="card-title">고위험군 학생 목록</div>
-        <div className="card-subtitle">상담이 필요한 학생 (AI 분석 기반)</div>
-      </div>
-      <div className="table-container">
-        <table className="risk-table">
-          <thead>
-            <tr>
-              <th>이름</th>
-              <th>학과</th>
-              <th>위험도</th>
-              <th>위험 점수</th>
-              <th>주요 증상</th>
-              <th>최근 응답일</th>
-              <th>액션</th>
-            </tr>
-          </thead>
-          <tbody>
+    <Card className="risk-list-card-modern">
+      <CardHeader className="list-header-modern">
+        <div className="header-content-modern">
+          <div>
+            <CardTitle tag="h5" className="list-title-modern">
+              상담 신청 목록
+            </CardTitle>
+            <p className="list-subtitle-modern">
+              {isUnlocked
+                ? `오늘 접수된 상담 신청 ${riskStudents.length}건`
+                : "민감한 학생 정보 보호를 위해 잠겨있습니다."}
+            </p>
+          </div>
+          {isUnlocked && (
+            <Button className="view-all-btn-modern">전체 보기</Button>
+          )}
+        </div>
+      </CardHeader>
+
+      <CardBody className="list-body-modern">
+        {isUnlocked ? (
+          <div className="student-list-grid">
+            {/* 헤더 행 */}
+            <div className="list-row-header-modern">
+              <span className="col-student">학생 정보</span>
+              <span className="col-dept">소속</span>
+              <span className="col-risk">위험도 분석</span>
+              <span className="col-date">신청일</span>
+              <span className="col-action"></span>
+            </div>
+
+            {/* 데이터 행 리스트 */}
             {riskStudents.map((student) => (
-              <tr key={student.id}>
-                <td>
-                  <div className="student-name">
-                    <span className="name-text">{student.name}</span>
+              <div key={student.id} className="list-row-item-modern">
+                {/* 1. 학생 프로필 */}
+                <div className="col-student student-profile-modern">
+                  <div className={`avatar-circle-modern ${student.riskLevel}`}>
+                    {student.name[0]}
+                  </div>
+                  <div className="student-info-modern">
+                    <span className="student-name">{student.name}</span>
                     <span className="student-id">{student.studentId}</span>
                   </div>
-                </td>
-                <td>
-                  <div className="department-info">
-                    <span className="college">{student.college}</span>
-                    <span className="department">{student.department}</span>
+                </div>
+
+                {/* 2. 소속 */}
+                <div className="col-dept dept-info-modern">
+                  <span className="college-name">{student.college}</span>
+                  <span className="dept-name">{student.dept}</span>
+                </div>
+
+                {/* 3. 위험도 */}
+                <div className="col-risk risk-info-modern">
+                  {getRiskBadge(student.riskLevel)}
+                  <div className="risk-score-box">
+                    <span className="score-label">위험점수</span>
+                    <span
+                      className="score-value"
+                      style={{ color: getScoreColor(student.riskScore) }}
+                    >
+                      {student.riskScore}
+                    </span>
                   </div>
-                </td>
-                <td>
-                  <span className={`risk-badge ${getRiskBadgeClass(student.riskLevel)}`}>
-                    {student.riskLevel}
-                  </span>
-                </td>
-                <td>
-                  <span className="risk-score" style={{
-                    color: student.riskScore >= 8 ? '#EF4444' : '#F59E0B'
-                  }}>
-                    {student.riskScore}
-                  </span>
-                </td>
-                <td>
-                  <div className="symptoms-tags">
-                    {student.symptoms.map((symptom, index) => {
-                      // 증상별 색상 매핑
-                      const getSymptomColor = (symptom) => {
-                        if (symptom.includes('불면') || symptom.includes('수면')) return { bg: '#DBEAFE', color: '#3B82F6' };
-                        if (symptom.includes('우울')) return { bg: '#FEE2E2', color: '#EF4444' };
-                        if (symptom.includes('불안') || symptom.includes('스트레스')) return { bg: '#FEF3C7', color: '#F59E0B' };
-                        if (symptom.includes('자해')) return { bg: '#FEE2E2', color: '#DC2626' };
-                        return { bg: '#F3F4F6', color: '#6B7280' };
-                      };
-                      const colors = getSymptomColor(symptom);
-                      return (
-                        <span
-                          key={index}
-                          className="symptom-tag"
-                          style={{ backgroundColor: colors.bg, color: colors.color }}
-                        >
-                          {symptom}
-                        </span>
-                      );
-                    })}
-                  </div>
-                </td>
-                <td>
-                  <span className="date-text">{student.lastResponse}</span>
-                </td>
-                <td>
-                  <div className="action-buttons">
-                    {student.counselingStatus === '대기중' && (
-                      <button
-                        className="action-btn action-btn-primary"
-                        onClick={() => alert(`${student.name} 학생에게 상담사를 배정합니다.`)}
-                      >
-                        상담사 배정
-                      </button>
-                    )}
-                    {student.counselingStatus === '진행중' && (
-                      <button
-                        className="action-btn action-btn-secondary"
-                        onClick={() => alert(`${student.name} 학생의 상담 로그를 확인합니다.`)}
-                      >
-                        로그 보기
-                      </button>
-                    )}
-                    {student.counselingStatus === '완료' && (
-                      <button
-                        className="action-btn action-btn-completed"
-                        onClick={() => alert(`${student.name} 학생의 상담 결과를 확인합니다.`)}
-                      >
-                        결과 보기
-                      </button>
-                    )}
-                  </div>
-                </td>
-              </tr>
+                </div>
+
+                {/* 4. 날짜 */}
+                <div className="col-date date-info-modern">
+                  <Calendar size={14} className="date-icon" />
+                  <span>{student.date}</span>
+                </div>
+
+                {/* 5. 액션 */}
+                <div className="col-action">
+                  <button className="action-btn-modern">
+                    상담하기 <ChevronRight size={16} />
+                  </button>
+                </div>
+              </div>
             ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+          </div>
+        ) : (
+          /* 잠금 화면 */
+          <div className="locked-content-modern" onClick={handleLockClick}>
+            <div className="locked-icon-wrapper">
+              <FaLock size={24} />
+            </div>
+            <p className="locked-title">인증이 필요합니다</p>
+            <p className="locked-desc">
+              학생 개인정보 보호를 위해 접근 권한을 확인합니다.
+            </p>
+            <Button className="unlock-btn">잠금 해제</Button>
+          </div>
+        )}
+      </CardBody>
+
+      {/* 인증 모달 (기존 로직 유지, 스타일 개선) */}
+      <Modal
+        isOpen={showAuthModal}
+        toggle={handleModalClose}
+        centered
+        className="auth-modal-modern"
+      >
+        <ModalHeader className="auth-header">관리자 인증</ModalHeader>
+        <ModalBody className="auth-body">
+          <Input
+            type="password"
+            placeholder="인증 코드를 입력하세요"
+            value={authCode}
+            onChange={(e) => {
+              setAuthCode(e.target.value);
+              setAuthError("");
+            }}
+            onKeyPress={(e) => e.key === "Enter" && handleAuthSubmit()}
+            className={`auth-input-modern ${authError ? "error" : ""}`}
+            autoFocus
+          />
+          {authError && <p className="auth-error-msg">{authError}</p>}
+        </ModalBody>
+        <ModalFooter className="auth-footer">
+          <Button onClick={handleModalClose} className="btn-cancel">
+            취소
+          </Button>
+          <Button className="btn-confirm" onClick={handleAuthSubmit}>
+            확인
+          </Button>
+        </ModalFooter>
+      </Modal>
+    </Card>
   );
 }
 
 export default RiskStudentList;
-
